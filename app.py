@@ -1,10 +1,14 @@
 from flask import Flask
+from flask_talisman import Talisman
 from customers import customers
 from transactions import transactions
 from appointments import appointments
 from square_api import square_api
 
 app = Flask(__name__)
+
+# Enforce HTTPS
+Talisman(app)
 
 @app.route("/")
 def home():
