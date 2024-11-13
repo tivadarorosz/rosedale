@@ -25,10 +25,10 @@ def home():
 	return "Welcome to Rosedale Massage API"
 	
 @app.before_request
-	def enforce_https():
-		if not request.is_secure:
-			url = request.url.replace("http://", "https://", 1)
-			return redirect(url, code=301)
+def enforce_https():
+	if not request.is_secure:
+		url = request.url.replace("http://", "https://", 1)
+		return redirect(url, code=301)
 
 # Register blueprints
 app.register_blueprint(customers, url_prefix='/customers')
