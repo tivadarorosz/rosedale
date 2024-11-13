@@ -6,6 +6,10 @@ from square_api import square_api
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+	return "Welcome to Rosedale Massage API"
+
 # Register blueprints
 app.register_blueprint(customers, url_prefix='/customers')
 app.register_blueprint(transactions, url_prefix='/transactions')
