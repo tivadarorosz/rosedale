@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from campfire_utils import send_message
 
 # Define the Blueprint
 customers = Blueprint("customers", __name__)
@@ -57,6 +58,15 @@ def create_customer():
 
 		# Log or process the customer data
 		print("Received customer data:", customer_data)
+		
+		# Post a message to Campfire in the Studio channel
+		try:
+			message = f"🎉 New Customer: {customer_name} ({customer_email}) just signed up!"
+			status, response = send_message("studio", message)
+			if status != 200:
+				raise Exception(f"Campfire error: {response}")
+		except Exception as e:
+			return jsonify({"error": f"Failed to notify Studio: {str(e)}"}), 500
 
 		# Return success response
 		return jsonify({"message": "Customer created successfully", "data": customer_data}), 201

@@ -4,11 +4,17 @@ from customers import customers
 from transactions import transactions
 from appointments import appointments
 from square_api import square_api
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 # Enforce HTTPS
 Talisman(app)
+
+# Load .env file only if not in production
+if os.getenv("FLASK_ENV") != "production":
+	load_dotenv()
 
 @app.route("/")
 def home():
