@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 
+# Define the Blueprint
 customers = Blueprint("customers", __name__)
 
-@customers.route("/customers/new", methods=["POST"])
+@customers.route("/new", methods=["POST"])
 def create_customer():
 	try:
 		# Parse incoming JSON
