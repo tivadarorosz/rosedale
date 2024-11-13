@@ -24,11 +24,10 @@ if os.getenv("FLASK_DEBUG") == "1":
 def home():
 	return "Welcome to Rosedale Massage API"
 	
-@app.before_request
-def enforce_https():
-	if not request.is_secure:
-		url = request.url.replace("http://", "https://", 1)
-		return redirect(url, code=301)
+#@app.before_request
+#def force_https():
+#	if request.endpoint in app.view_functions and not request.is_secure:
+#		return redirect(request.url.replace('http://', 'https://'))
 
 # Register blueprints
 app.register_blueprint(customers, url_prefix='/customers')
