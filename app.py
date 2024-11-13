@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, redirect
 from flask_talisman import Talisman
 from customers import customers
 from transactions import transactions
@@ -9,17 +9,26 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+if os.getenv("FLASK_DEBUG") == "1":
+	app.debug = True
+
 # Enforce HTTPS
-# Talisman(app)
-Talisman(app, force_https=False)  # Disable HTTPS enforcement
+#Talisman(app)
+#Talisman(app, force_https=False)  # Disable HTTPS enforcement
 
 # Load .env file only if not in production
-if os.getenv("FLASK_ENV") != "production":
-	load_dotenv()
+#if os.getenv("FLASK_DEBUG") != "production":
+#	load_dotenv()
 
 @app.route("/")
 def home():
 	return "Welcome to Rosedale Massage API"
+	
+@app.before_request
+	def enforce_https():
+		if not request.is_secure:
+			url = request.url.replace("http://", "https://", 1)
+			return redirect(url, code=301)
 
 # Register blueprints
 app.register_blueprint(customers, url_prefix='/customers')
