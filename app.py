@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 
 # Enforce HTTPS
-Talisman(app)
+# Talisman(app)
+Talisman(app, force_https=False)  # Disable HTTPS enforcement
 
 # Load .env file only if not in production
 if os.getenv("FLASK_ENV") != "production":

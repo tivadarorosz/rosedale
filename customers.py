@@ -27,17 +27,6 @@ def create_customer():
 
 		# Extract custom fields
 		custom_fields = data.get("custom_fields", {})
-		is_pregnant = custom_fields.get("cf_uSnk1aJv", "off") == "on"
-		has_cancer = custom_fields.get("cf_ku8f8Fd8", "off") == "on"
-		has_blood_clots = custom_fields.get("cf_i6npNsJK", "off") == "on"
-		has_infectious_disease = custom_fields.get("cf_LICrcXyq", "off") == "on"
-		has_bp_issues = custom_fields.get("cf_sIG5JoOc", "off") == "on"
-		has_severe_pain = custom_fields.get("cf_R5ffCcvB", "off") == "on"
-		customer_notes = custom_fields.get("cf_AYXmttXr", "")
-		newsletter_signup = custom_fields.get("cf_13R2jN9C", "off") == "on"
-		accepted_terms = custom_fields.get("cf_xGQSo978", "off") == "on"
-
-		# Store values in variables (example below; replace with your storage logic)
 		customer_data = {
 			"id": customer_id,
 			"first_name": first_name,
@@ -45,26 +34,24 @@ def create_customer():
 			"full_name": full_name,
 			"email": email,
 			"phone": phone,
-			"is_pregnant": is_pregnant,
-			"has_cancer": has_cancer,
-			"has_blood_clots": has_blood_clots,
-			"has_infectious_disease": has_infectious_disease,
-			"has_bp_issues": has_bp_issues,
-			"has_severe_pain": has_severe_pain,
-			"customer_notes": customer_notes,
-			"newsletter_signup": newsletter_signup,
-			"accepted_terms": accepted_terms,
+			"is_pregnant": custom_fields.get("cf_uSnk1aJv", "off") == "on",
+			"has_cancer": custom_fields.get("cf_ku8f8Fd8", "off") == "on",
+			"has_blood_clots": custom_fields.get("cf_i6npNsJK", "off") == "on",
+			"has_infectious_disease": custom_fields.get("cf_LICrcXyq", "off") == "on",
+			"has_bp_issues": custom_fields.get("cf_sIG5JoOc", "off") == "on",
+			"has_severe_pain": custom_fields.get("cf_R5ffCcvB", "off") == "on",
+			"customer_notes": custom_fields.get("cf_AYXmttXr", ""),
+			"newsletter_signup": custom_fields.get("cf_13R2jN9C", "off") == "on",
+			"accepted_terms": custom_fields.get("cf_xGQSo978", "off") == "on",
 		}
 
-		# Log or process the customer data
 		print("Received customer data:", customer_data)
-		
+
 		# Post a message to Campfire in the Studio channel
 		try:
-			message = f"🎉 New Customer: {customer_name} ({customer_email}) just signed up!"
+			message = f"🎉 New Customer: {full_name} ({email}) just signed up!"
 			status, response = send_message("studio", message)
-			if status != 200:
-				raise Exception(f"Campfire error: {response}")
+			print(f"Campfire Response: Status {status}, Body: {response}")
 		except Exception as e:
 			return jsonify({"error": f"Failed to notify Studio: {str(e)}"}), 500
 
