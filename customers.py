@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from campfire_utils import send_message
+import logging
 
 # Define the Blueprint
 customers = Blueprint("customers", __name__)
@@ -9,6 +10,7 @@ def create_customer():
 	try:
 		# Parse incoming JSON
 		data = request.get_json()
+		logging.info("Create customer")
 
 		# Extract and validate required fields
 		customer_id = data.get("id")
@@ -46,6 +48,7 @@ def create_customer():
 		}
 
 		print("Received customer data:", customer_data)
+		logging.info(f"Received customer data: {customer_data}")
 
 		# Post a message to Campfire in the Studio channel
 		try:

@@ -6,6 +6,10 @@ from appointments import appointments
 from square_api import square_api
 import os
 from dotenv import load_dotenv
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 app = Flask(__name__)
 
@@ -26,8 +30,8 @@ def home():
 	
 #@app.before_request
 #def force_https():
-#	if request.endpoint in app.view_functions and not request.is_secure:
-#		return redirect(request.url.replace('http://', 'https://'))
+#if request.endpoint in app.view_functions and not request.is_secure:
+#	return redirect(request.url.replace('http://', 'https://'))
 
 # Register blueprints
 app.register_blueprint(customers, url_prefix='/customers')
