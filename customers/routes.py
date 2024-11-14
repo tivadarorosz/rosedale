@@ -39,7 +39,7 @@ def create_customer():
 		status = "active"
 
 		# Extract custom fields
-		custom_fields = data.to_dict(flat=False).get("custom_fields", {})
+		# custom_fields = data.to_dict(flat=False).get("custom_fields", {})
 		customer = {
 			"id": customer_id,
 			"first_name": first_name,
