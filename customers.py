@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, jsonify
 from campfire_utils import send_message
 import logging
@@ -10,12 +11,18 @@ customers = Blueprint("customers", __name__)
 @customers.route("/new", methods=["POST"])
 def create_customer():
 	try:
-		# Parse incoming JSON
-		data = request.get_json()
-		logger.info("Create customer")
+		# Parse incoming request data
+		data = request.get_data(as_text=True)
+		logger.info(f"Received data: {data}")
+
+		# Check if the data is a valid JSON string
+		try:
+			customer_data_list = json.loads(data)
+		except json.JSONDecodeError:
+			return jsonify({"error": "Invalid JSON data"}), 400
 
 		# Iterate over each customer in the list
-		for customer_data in data:
+		for customer_data in customer_data_list:
 			# Extract and validate required fields
 			customer_id = customer_data.get("id")
 			first_name = customer_data.get("first_name")
