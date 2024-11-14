@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from campfire_utils import send_message
 import logging
 
+logger = logging.getLogger(__name__)
+
 # Define the Blueprint
 customers = Blueprint("customers", __name__)
 
@@ -10,7 +12,7 @@ def create_customer():
 	try:
 		# Parse incoming JSON
 		data = request.get_json()
-		logging.info("Create customer")
+		logger.info("Create customer")
 
 		# Extract and validate required fields
 		customer_id = data.get("id")
@@ -47,20 +49,24 @@ def create_customer():
 			"accepted_terms": custom_fields.get("cf_xGQSo978", "off") == "on",
 		}
 
-		print("Received customer data:", customer_data)
-		logging.info(f"Received customer data: {customer_data}")
+		logger.info(f"Received customer data: {customer_data}")
 
 		# Post a message to Campfire in the Studio channel
 		try:
 			message = f"🎉 New Customer: {full_name} ({email}) just signed up!"
 			status, response = send_message("studio", message)
-			print(f"Campfire Response: Status {status}, Body: {response}")
+			logger.info(f"Campfire Response: Status {status}, Body: {response}")
 		except Exception as e:
-			return jsonify({"error": f"Failed to notify Studio: {str(e)}"}), 500
+			logger.error(f"Failed to notify Studio: {str(e)}")
+			return jsonify({"error": f"Failed to notify Studio"}), 500
 
 		# Return success response
 		return jsonify({"message": "Customer created successfully", "data": customer_data}), 201
 
+	except KeyError as e:
+		logger.error(f"Missing key: {str(e)}")
+		return jsonify({"error": f"Missing key: {str(e)}"}), 400
 	except Exception as e:
 		# Handle unexpected errors
-		return jsonify({"error": str(e)}), 500
+		logger.error(f"Unexpected error: {str(e)}")
+		return jsonify({"error": "An unexpected error occurred"}), 500
