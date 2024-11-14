@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 
-appointments = Blueprint('appointments', __name__)
+appointments_bp = Blueprint("appointments", __name__, url_prefix="/appointments")
 
-@appointments.route('/finished', methods=['POST'])
+@appointments_bp.route('/finished', methods=['POST'])
 def appointment_finished():
 	data = request.get_json()
 	# Logic to handle marking an appointment as finished
