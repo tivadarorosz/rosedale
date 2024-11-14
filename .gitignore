@@ -8,3 +8,4 @@ __pycache__/
 .env.dev
 cert.pem
 key.pem
+square_test.py

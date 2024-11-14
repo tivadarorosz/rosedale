@@ -60,7 +60,6 @@ def create_customer():
 			"accepted_terms": data.get('custom_fields[cf_xGQSo978]') == "on"
 		}
 
-		logger.info(f"customer_notes: {data.get('custom_fields[cf_AYXmttXr]')}")
 		logger.info(f"Received customer data: {customer}")
 
 		# Post a message to Campfire in the Studio channel
