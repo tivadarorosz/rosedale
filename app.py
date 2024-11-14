@@ -29,6 +29,9 @@ app.register_blueprint(customers, url_prefix='/customers')
 app.register_blueprint(transactions, url_prefix='/transactions')
 app.register_blueprint(appointments, url_prefix='/appointments') 
 app.register_blueprint(square_api, url_prefix='/square')
-
+	
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=8080)
+	if os.getenv("FLASK_DEBUG") == "1":
+		app.run(host='0.0.0.0', port=8080, ssl_context=('cert.pem', 'key.pem'))
+	else:
+		app.run(host='0.0.0.0', port=8080)

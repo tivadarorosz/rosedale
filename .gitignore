@@ -5,3 +5,5 @@ __pycache__/
 .DS_Store
 .nova/
 .env
+cert.pem
+key.pem
