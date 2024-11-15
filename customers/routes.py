@@ -155,17 +155,14 @@ def create_or_update_square_customer():
 		logger.info(f"Received data: {data}")
 
 		# Extract and validate required fields
-		square_id = data["id"]
-		first_name = data["given_name"]
-		last_name = data["family_name"] 
-		email = data["email_address"]
-		phone = data.get("phone_number", "")
-		if address:
-			location = address.get("locality")
-			postcode = address.get("postal_code")
-		else:
-			location = ""
-			postcode = ""
+		square_id = data["data"]["object"]["customer"]["id"]
+		first_name = data["data"]["object"]["customer"]["given_name"]
+		last_name = data["data"]["object"]["customer"]["family_name"]
+		email = data["data"]["object"]["customer"]["email_address"]
+		phone = data["data"]["object"]["customer"].get("phone_number", "")
+		address = data["data"]["object"]["customer"]["address"]
+		location = address.get("locality")
+		postcode = address.get("postal_code")
 		
 		# Determine gender from first name using Gender API
 		gender = get_gender(first_name)
