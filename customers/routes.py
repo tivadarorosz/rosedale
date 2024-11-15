@@ -13,6 +13,7 @@ customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
 CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
 CHARLOTTE_FORM_ID = os.getenv("CONVERTKIT_CHARLOTTE_FORM_ID")
+MILLS_FORM_ID = os.getenv("CONVERTKIT_MILLS_FORM_ID")
 
 @customers_bp.route("/new/latepoint", methods=["POST"])
 def create_latepoint_customer():
@@ -86,7 +87,7 @@ def create_latepoint_customer():
 			
 			# Post a message to Campfire only for new customers
 			try:
-				message = f"🎉 New Customer: {full_name} ({email}) just signed up!"
+				message = f"🎉 New LatePoint Customer: {full_name} ({email}) just signed up!"
 				
 				if os.getenv("FLASK_ENV") != "development":
 					status, response = send_message("studio", message)
@@ -144,4 +145,122 @@ def create_latepoint_customer():
 		# Handle unexpected errors
 		logger.error(f"Unexpected error: {str(e)}")
 		logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
+		return jsonify({"error": "An unexpected error occurred"}), 500
+
+@customers_bp.route("/new/square", methods=["POST"])
+def create_or_update_square_customer():
+	try:
+		# Parse incoming JSON data
+		data = request.get_json()
+		logger.info(f"Received data: {data}")
+
+		# Extract and validate required fields
+		square_id = data["id"]
+		first_name = data["given_name"]
+		last_name = data["family_name"] 
+		email = data["email_address"]
+		phone = data.get("phone_number", "")
+		location = data.get("locality", "")
+		postcode = data.get("postal_code", "")
+		
+		# Determine gender from first name using Gender API
+		gender = get_gender(first_name)
+		
+		# Determine customer type based on email
+		customer_type = determine_customer_type(email)
+		logger.info(f"Determined customer type for {email}: {customer_type}")
+
+		# Prepare customer data
+		customer = {
+			"latepoint_id": None,
+			"square_id": square_id,
+			"first_name": first_name,
+			"last_name": last_name,
+			"gender": gender,
+			"email": email,
+			"phone": phone,
+			"location": location,
+			"postcode": postcode,
+			"status": "active",
+			"type": customer_type,
+			"type": "client",
+			"newsletter_signup": False,
+			"accepted_terms": False
+		}
+
+		# Check if customer exists
+		customer_exists = check_email_exists(email)
+
+		if customer_exists:
+			# Update existing customer with the new square_id
+			logger.info(f"Updating existing customer with email: {email}")
+			customer = {
+				"latepoint_id": None,
+				"square_id": square_id
+			}
+			customer_id = update_latepoint_customer(customer)
+			message = "Customer updated successfully"
+		else:
+			# Create new customer
+			logger.info(f"Creating new customer with email: {email}")
+			customer["newsletter_signup"] = True
+			customer_id = create_db_customer(customer)
+			message = "Customer created successfully"
+			
+			# Add customer to the newsletter (auto opt-in)
+			try:
+				# ConvertKit API endpoint for adding a subscriber to a form
+				url = f"https://api.convertkit.com/v3/forms/{MILLS_FORM_ID}/subscribe"
+			
+				# Create subscriber data
+				subscriber_data = {
+					"api_key": CONVERTKIT_API_KEY,
+					"email": email,
+					"first_name": first_name,
+					"fields": {
+						"last_name": last_name
+					}
+				}
+			
+				# Send POST request to add subscriber to the form
+				headers = {
+					"Content-Type": "application/json"
+				}
+				response = requests.post(url, json=subscriber_data, headers=headers)
+			
+				# Check the response status
+				if response.status_code == 200:
+					logger.info(f"Successfully added {email} to ConvertKit form: {MILLS_FORM_ID}")
+				else:
+					logger.error(f"Failed to add {email} to ConvertKit form: {MILLS_FORM_ID}. Status Code: {response.status_code}")
+					logger.error(f"Response Content: {response.text}")
+			
+			except Exception as e:
+				logger.error(f"Error adding {email} to ConvertKit: {str(e)}")
+				
+			# Post a message to Campfire only for new customers
+			try:
+				message = f"🎉 New Square Customer: {full_name} ({email}) just signed up!"
+				
+				if os.getenv("FLASK_ENV") != "development":
+					status, response = send_message("studio", message)
+					logger.info(f"Campfire Response: Status {status}, Body: {response}")
+			
+			except Exception as e:
+				logger.error(f"Failed to notify Studio: {str(e)}")
+				return jsonify({"error": f"Failed to notify Studio"}), 500
+
+		# Return success response
+		return jsonify({
+			"id": customer_id,
+			"message": message,
+			"action": "updated" if customer_exists else "created"
+		}), 200
+
+	except KeyError as e:
+		logger.error(f"Missing key: {str(e)}")
+		return jsonify({"error": f"Missing key: {str(e)}"}), 400
+	except Exception as e:
+		# Handle unexpected errors
+		logger.error(f"Unexpected error: {str(e)}")
 		return jsonify({"error": "An unexpected error occurred"}), 500
