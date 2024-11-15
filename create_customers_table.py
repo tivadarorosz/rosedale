@@ -19,10 +19,12 @@ def create_customers_table():
 		# Drop the customers table if it exists
 		cur.execute("DROP TABLE IF EXISTS customers")
 	
-		# Create the customers table
+		# Create the customers table with new fields, indexes, and constraints
 		cur.execute("""
 			CREATE TABLE customers (
 				id SERIAL PRIMARY KEY,
+				latepoint_id INTEGER UNIQUE,
+				square_id TEXT UNIQUE,
 				first_name VARCHAR(50) NOT NULL,
 				last_name VARCHAR(50) NOT NULL,
 				email VARCHAR(100) UNIQUE NOT NULL,
@@ -32,16 +34,30 @@ def create_customers_table():
 				location VARCHAR(100) DEFAULT NULL,
 				postcode VARCHAR(10) DEFAULT NULL,
 				status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'deleted', 'guest', 'vip')),
-				custom_data TEXT DEFAULT NULL,
+				is_pregnant BOOLEAN DEFAULT NULL,
+				has_cancer BOOLEAN DEFAULT NULL,
+				has_blood_clots BOOLEAN DEFAULT NULL,
+				has_infectious_disease BOOLEAN DEFAULT NULL,
+				has_bp_issues BOOLEAN DEFAULT NULL,
+				has_severe_pain BOOLEAN DEFAULT NULL,
 				newsletter_subscribed BOOLEAN DEFAULT FALSE,
 				accepted_terms BOOLEAN DEFAULT TRUE,
 				account_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+				last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				CONSTRAINT at_least_one_id CHECK (
+					(latepoint_id IS NOT NULL) OR (square_id IS NOT NULL)
+				)
 			)
+		""")
+
+		# Create indexes for faster searching
+		cur.execute("""
+			CREATE INDEX idx_latepoint_id ON customers(latepoint_id);
+			CREATE INDEX idx_square_id ON customers(square_id);
 		""")
 	
 		conn.commit()
-		print("customers table created successfully")
+		print("customers table created successfully with indexes and constraints")
 	
 	except (Exception, psycopg2.Error) as error:
 		print("Error creating customers table:", error)
