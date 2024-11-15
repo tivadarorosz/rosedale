@@ -177,7 +177,7 @@ def create_or_update_square_customer():
 		last_name = data["data"]["object"]["customer"]["family_name"]
 		email = data["data"]["object"]["customer"]["email_address"]
 		phone = data["data"]["object"]["customer"].get("phone_number", "")
-		address = data["data"]["object"]["customer"]["address"]
+		address = data["data"]["object"]["customer"].get("address", {})
 		location = address.get("locality")
 		postcode = address.get("postal_code")
 		
@@ -211,10 +211,6 @@ def create_or_update_square_customer():
 		if customer_exists:
 			# Update existing customer with the new square_id
 			logger.info(f"Updating existing customer with email: {email}")
-			customer = {
-				"latepoint_id": None,
-				"square_id": square_id
-			}
 			customer_id = update_latepoint_customer(customer)
 			message = "Customer updated successfully"
 		else:
