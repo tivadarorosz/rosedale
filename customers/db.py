@@ -28,13 +28,13 @@ def create_db_customer(customer):
 	
 	query = """
 		INSERT INTO customers (
-			latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, 
+			latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, type, 
 			is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, 
 			newsletter_subscribed, accepted_terms
 		)
 		VALUES (
 			%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, 
-			%(dob)s, %(location)s, %(postcode)s, %(status)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
+			%(dob)s, %(location)s, %(postcode)s, %(status)s, %(type)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
 			%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s
 		)
 		RETURNING id;
@@ -52,6 +52,7 @@ def create_db_customer(customer):
 		"location": customer.get("location"),
 		"postcode": customer.get("postcode"),
 		"status": customer["status"],
+		"type": customer["type"],
 		"is_pregnant": customer.get("is_pregnant", False),
 		"has_cancer": customer.get("has_cancer", False),
 		"has_blood_clots": customer.get("has_blood_clots", False),
@@ -109,6 +110,7 @@ def update_latepoint_customer(customer):
 			phone = %(phone)s,
 			gender = %(gender)s,
 			status = %(status)s,
+			type = %(type)s,
 			is_pregnant = %(is_pregnant)s,
 			has_cancer = %(has_cancer)s,
 			has_blood_clots = %(has_blood_clots)s,
@@ -130,6 +132,7 @@ def update_latepoint_customer(customer):
 		"phone": customer["phone"],
 		"gender": customer["gender"],
 		"status": customer["status"],
+		"type": customer["type"],
 		"is_pregnant": customer.get("is_pregnant", False),
 		"has_cancer": customer.get("has_cancer", False),
 		"has_blood_clots": customer.get("has_blood_clots", False),
@@ -152,3 +155,21 @@ def update_latepoint_customer(customer):
 	finally:
 		cur.close()
 		conn.close()
+		
+def determine_customer_type(email):
+	"""
+	Determine customer type based on email domain and business rules
+	"""
+	try:
+		domain = email.split('@')[1].lower()
+		
+		# Employee check
+		if domain == "rosedalemassage.co.uk":
+			return "employee"
+			
+		# Default to regular client
+		return "client"
+		
+	except Exception as e:
+		logger.error(f"Error determining customer type: {e}")
+		return "client"  # Default to client if there's any error

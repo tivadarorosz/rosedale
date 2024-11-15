@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import os
-from customers.db import create_db_customer, check_email_exists, update_latepoint_customer
+from customers.db import create_db_customer, check_email_exists, update_latepoint_customer, determine_customer_type
 from api_utils import get_gender
 from campfire_utils import send_message
 import logging
@@ -34,6 +34,10 @@ def create_latepoint_customer():
 
 		# Determine gender from first name using Gender API
 		gender = get_gender(first_name)
+		
+		# Determine customer type based on email
+		customer_type = determine_customer_type(email)
+		logger.info(f"Determined customer type for {email}: {customer_type}")
 
 		# Set the default status to 'active'
 		status = "active"
@@ -49,6 +53,7 @@ def create_latepoint_customer():
 			"phone": phone,
 			"gender": gender,
 			"status": status,
+			"type": customer_type,
 			"is_pregnant": data.get('custom_fields[cf_uSnk1aJv]') == "on",
 			"has_cancer": data.get('custom_fields[cf_ku8f8Fd8]') == "on",
 			"has_blood_clots": data.get('custom_fields[cf_i6npNsJK]') == "on",

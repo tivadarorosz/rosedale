@@ -34,6 +34,7 @@ def create_customers_table():
 				location VARCHAR(100) DEFAULT NULL,
 				postcode VARCHAR(10) DEFAULT NULL,
 				status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'deleted', 'guest', 'vip')),
+				type VARCHAR(20) NOT NULL DEFAULT 'client',
 				is_pregnant BOOLEAN DEFAULT NULL,
 				has_cancer BOOLEAN DEFAULT NULL,
 				has_blood_clots BOOLEAN DEFAULT NULL,
