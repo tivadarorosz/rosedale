@@ -5,6 +5,7 @@ from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from api_utils import get_gender
 from campfire_utils import send_message
 from convertkit import ConvertKit
+import requests
 import logging
 import traceback
 
@@ -165,6 +166,10 @@ def create_or_update_square_customer():
 			os.getenv('SQUARE_NEW_CUSTOMER_SIGNATURE_KEY'),
 			os.getenv('SQUARE_NEW_CUSTOMER_NOTIFICATION_URL')
 		)
+		
+		if not is_from_square:
+			logger.warning("Invalid Square signature")
+			return jsonify({"error": "Invalid signature"}), 403
 
 		# Extract and validate required fields
 		square_id = data["data"]["object"]["customer"]["id"]
@@ -196,7 +201,6 @@ def create_or_update_square_customer():
 			"postcode": postcode,
 			"status": "active",
 			"type": customer_type,
-			"type": "client",
 			"newsletter_signup": False,
 			"accepted_terms": False
 		}
@@ -253,7 +257,7 @@ def create_or_update_square_customer():
 				
 			# Post a message to Campfire only for new customers
 			try:
-				message = f"🎉 New Square Customer: {full_name} ({email}) just signed up!"
+				message = f"🎉 New Square Customer: {first_name} {last_name} ({email}) just signed up!"
 				
 				if os.getenv("FLASK_ENV") != "development":
 					status, response = send_message("studio", message)
