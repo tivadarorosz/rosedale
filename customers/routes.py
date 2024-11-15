@@ -3,12 +3,16 @@ import os
 from customers.db import create_db_customer, check_email_exists, update_latepoint_customer, determine_customer_type
 from api_utils import get_gender
 from campfire_utils import send_message
+from convertkit import ConvertKit
 import logging
 import traceback
 
 logger = logging.getLogger(__name__)
 
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
+
+CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
+CHARLOTTE_FORM_ID = os.getenv("CONVERTKIT_CHARLOTTE_FORM_ID")
 
 @customers_bp.route("/new/latepoint", methods=["POST"])
 def create_latepoint_customer():
@@ -93,6 +97,38 @@ def create_latepoint_customer():
 				return jsonify({"error": f"Failed to notify Studio"}), 500
 				
 			message = "Customer created successfully"
+			
+		# Check if the customer opted for newsletter signup
+			if customer["newsletter_signup"]:
+				try:
+					# ConvertKit API endpoint for adding a subscriber to a form
+					url = f"https://api.convertkit.com/v3/forms/{CHARLOTTE_FORM_ID}/subscribe"
+			
+					# Create subscriber data
+					subscriber_data = {
+						"api_key": CONVERTKIT_API_KEY,
+						"email": email,
+						"first_name": first_name,
+						"fields": {
+							"last_name": last_name
+						}
+					}
+			
+					# Send POST request to add subscriber to the form
+					headers = {
+						"Content-Type": "application/json"
+					}
+					response = requests.post(url, json=subscriber_data, headers=headers)
+			
+					# Check the response status
+					if response.status_code == 200:
+						logger.info(f"Successfully added {email} to ConvertKit form: {CHARLOTTE_FORM_ID}")
+					else:
+						logger.error(f"Failed to add {email} to ConvertKit form: {CHARLOTTE_FORM_ID}. Status Code: {response.status_code}")
+						logger.error(f"Response Content: {response.text}")
+				
+				except Exception as e:
+					logger.error(f"Error adding {email} to ConvertKit: {str(e)}")
 
 		# Return success response
 		return jsonify({
