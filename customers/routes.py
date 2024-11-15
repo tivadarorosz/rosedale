@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import os
 from customers.db import create_db_customer, check_email_exists, update_latepoint_customer, determine_customer_type
+from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from api_utils import get_gender
 from campfire_utils import send_message
 from convertkit import ConvertKit
@@ -153,6 +154,17 @@ def create_or_update_square_customer():
 		# Parse incoming JSON data
 		data = request.get_json()
 		logger.info(f"Received data: {data}")
+		
+		# Extract the signature from the request headers
+		square_signature = request.headers.get('x-square-hmacsha256-signature')
+		
+		# Validate the signature
+		is_from_square = is_valid_webhook_event_signature(
+			request.data.decode('utf-8'),
+			square_signature,
+			os.getenv('SQUARE_NEW_CUSTOMER_SIGNATURE_KEY'),
+			os.getenv('SQUARE_NEW_CUSTOMER_NOTIFICATION_URL')
+		)
 
 		# Extract and validate required fields
 		square_id = data["data"]["object"]["customer"]["id"]
