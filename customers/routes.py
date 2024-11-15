@@ -24,7 +24,6 @@ def create_latepoint_customer():
 		full_name = data.get("full_name")
 		email = data.get("email")
 		phone = data.get("phone")
-		customer_id = None
 
 		if not all([latepoint_id, first_name, last_name, full_name, email, phone]):
 			return jsonify({"error": "Missing required customer fields"}), 400
@@ -39,8 +38,7 @@ def create_latepoint_customer():
 		# Set the default status to 'active'
 		status = "active"
 
-		# Extract custom fields
-		# custom_fields = data.to_dict(flat=False).get("custom_fields", {})
+		# Prepare customer data
 		customer = {
 			"latepoint_id": latepoint_id,
 			"square_id": None,
@@ -62,33 +60,41 @@ def create_latepoint_customer():
 			"accepted_terms": data.get('custom_fields[cf_xGQSo978]') == "on"
 		}
 
-		logger.info(f"Received customer data: {customer}")
+		logger.info(f"Processing customer data: {customer}")
 
-
-		# Database steps
-		# Check if email already exists
-		if check_email_exists(email):
-			logger.info(f"Email {email} already exists in database")
+		# Check if customer exists
+		customer_exists = check_email_exists(email)
+		
+		if customer_exists:
+			# Update existing customer
+			logger.info(f"Updating existing customer with email: {email}")
 			customer_id = update_latepoint_customer(customer)
-			# return jsonify({"message": "Email already exists"}), 200
+			message = "Customer updated successfully"
 		else:
-			# Create the LatePoint customer in the database
+			# Create new customer
+			logger.info(f"Creating new customer with email: {email}")
 			customer_id = create_db_customer(customer)
 			
-		# Post a message to Campfire in the Studio channel
-		try:
-			message = f"🎉 New Booking Customer {customer_id}: {full_name} ({email}) just signed up!"
+			# Post a message to Campfire only for new customers
+			try:
+				message = f"🎉 New Customer: {full_name} ({email}) just signed up!"
+				
+				if os.getenv("FLASK_ENV") != "development":
+					status, response = send_message("studio", message)
+					logger.info(f"Campfire Response: Status {status}, Body: {response}")
 			
-			if os.getenv("FLASK_ENV") != "development":
-				status, response = send_message("studio", message)
-				logger.info(f"Campfire Response: Status {status}, Body: {response}")
-		
-		except Exception as e:
-			logger.error(f"Failed to notify Studio: {str(e)}")
-			return jsonify({"error": f"Failed to notify Studio"}), 500
+			except Exception as e:
+				logger.error(f"Failed to notify Studio: {str(e)}")
+				return jsonify({"error": f"Failed to notify Studio"}), 500
+				
+			message = "Customer created successfully"
 
 		# Return success response
-		return jsonify({"id": customer_id, "message": "Customer created successfully"}), 201
+		return jsonify({
+			"id": customer_id, 
+			"message": message,
+			"action": "updated" if customer_exists else "created"
+		}), 200
 
 	except KeyError as e:
 		logger.error(f"Missing key: {str(e)}")

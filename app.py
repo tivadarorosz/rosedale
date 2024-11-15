@@ -1,6 +1,5 @@
 from flask import Flask, jsonify
 from dotenv import load_dotenv
-from customers.routes import customers_bp
 import os
 import logging
 import traceback
@@ -16,7 +15,7 @@ if os.getenv("FLASK_ENV") == "development":
 else:
 	load_dotenv()
 
-# Register blueprints
+# Register blueprints - remove duplicate import
 from customers.routes import customers_bp
 app.register_blueprint(customers_bp, url_prefix='/customers')
 
@@ -28,6 +27,12 @@ app.register_blueprint(appointments_bp, url_prefix='/appointments')
 
 from square_api.routes import square_api_bp
 app.register_blueprint(square_api_bp, url_prefix='/square')
+
+@app.before_first_request
+def debug_routes():
+	print("\nRegistered Routes:")
+	for rule in app.url_map.iter_rules():
+		print(f"{rule.endpoint}: {rule.rule} [{', '.join(rule.methods)}]")
 
 @app.route("/")
 def home():

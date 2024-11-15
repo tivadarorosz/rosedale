@@ -28,23 +28,29 @@ def create_db_customer(customer):
 	
 	query = """
 		INSERT INTO customers (
-			latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, newsletter_subscribed, accepted_terms
+			latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, 
+			is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, 
+			newsletter_subscribed, accepted_terms
 		)
-		VALUES (%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, %(dob)s, %(location)s, %(postcode)s, %(status)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, %(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s)
+		VALUES (
+			%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, 
+			%(dob)s, %(location)s, %(postcode)s, %(status)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
+			%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s
+		)
 		RETURNING id;
 	"""
 	
 	values = {
-		"latepoint_id": customer.get("latepoint_id", None),
-		"square_id": customer.get("square_id", None),
+		"latepoint_id": customer.get("latepoint_id"),  # Removed default None as it's handled by DB
+		"square_id": customer.get("square_id"),
 		"first_name": customer["first_name"],
 		"last_name": customer["last_name"],
 		"email": customer["email"],
 		"phone": customer["phone"],
 		"gender": customer["gender"],
-		"dob": customer.get("dob", None),
-		"location": customer.get("location", None),
-		"postcode": customer.get("postcode", None),
+		"dob": customer.get("dob"),
+		"location": customer.get("location"),
+		"postcode": customer.get("postcode"),
 		"status": customer["status"],
 		"is_pregnant": customer.get("is_pregnant", False),
 		"has_cancer": customer.get("has_cancer", False),
@@ -59,8 +65,7 @@ def create_db_customer(customer):
 	try:
 		cur.execute(query, values)
 		conn.commit()
-		id = cur.fetchone()["id"]
-		return id
+		return cur.fetchone()["id"]
 	except (Exception, psycopg2.Error) as error:
 		print("Error creating customer:", error)
 		conn.rollback()
@@ -74,17 +79,16 @@ def check_email_exists(email):
 	cur = conn.cursor(cursor_factory=RealDictCursor)
 	
 	query = """
-		SELECT EXISTS(
-			SELECT 1 
-			FROM customers 
-			WHERE email = %(email)s
-		);
+		SELECT id 
+		FROM customers 
+		WHERE email = %(email)s
+		LIMIT 1;
 	"""
 	
 	try:
 		cur.execute(query, {"email": email})
-		exists = cur.fetchone()["exists"]
-		return exists
+		result = cur.fetchone()
+		return bool(result)
 	except (Exception, psycopg2.Error) as error:
 		print("Error checking email existence:", error)
 		raise
@@ -140,9 +144,7 @@ def update_latepoint_customer(customer):
 		cur.execute(query, values)
 		conn.commit()
 		result = cur.fetchone()
-		if result:
-			return result["id"]
-		return None  # Return None if no record was updated
+		return result["id"] if result else None
 	except (Exception, psycopg2.Error) as error:
 		print("Error updating customer:", error)
 		conn.rollback()
