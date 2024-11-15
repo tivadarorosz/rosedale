@@ -160,8 +160,12 @@ def create_or_update_square_customer():
 		last_name = data["family_name"] 
 		email = data["email_address"]
 		phone = data.get("phone_number", "")
-		location = data.get("locality", "")
-		postcode = data.get("postal_code", "")
+		if address:
+			location = address.get("locality")
+			postcode = address.get("postal_code")
+		else:
+			location = ""
+			postcode = ""
 		
 		# Determine gender from first name using Gender API
 		gender = get_gender(first_name)
