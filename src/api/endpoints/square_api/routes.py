@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 import requests
 import os
 
-square_api_bp = Blueprint("square_api", __name__, url_prefix="/square_api")
+square_api_bp = Blueprint("square_api", __name__)
+# square_api_bp = Blueprint("square_api", __name__, url_prefix="/square_api")
 
 SQUARE_API_BASE = "https://connect.squareup.com/v2"
 

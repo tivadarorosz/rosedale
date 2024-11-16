@@ -1,11 +1,9 @@
-config.yaml
+config
 __pycache__/
 *.log
 *.env
-.DS_Store
-.nova/
 .env
 .env.dev
-cert.pem
-key.pem
-square_test.py
+.DS_Store
+.nova/
+ssl
