@@ -29,11 +29,14 @@ app.register_blueprint(appointments_bp, url_prefix='/appointments')
 from src.api.endpoints.square_api.routes import square_api_bp
 app.register_blueprint(square_api_bp, url_prefix='/square')
 
-@app.before_first_request
-def debug_routes():
+# Replace before_first_request with a function that runs at startup
+def print_registered_routes():
 	print("\nRegistered Routes:")
 	for rule in app.url_map.iter_rules():
 		print(f"{rule.endpoint}: {rule.rule} [{', '.join(rule.methods)}]")
+
+# Call it right after all blueprints are registered
+print_registered_routes()
 
 @app.route("/")
 def home():
