@@ -24,6 +24,7 @@ def get_db_connection():
 		return conn
 	except (Exception, psycopg2.Error) as error:
 		print("Error connecting to the database:", error)
+		send_error_email(str(error))
 		raise
 
 def create_db_customer(customer):
@@ -46,7 +47,7 @@ def create_db_customer(customer):
 		"""
 		
 		values = {
-			"latepoint_id": customer.get("latepoint_id"),  # Removed default None as it's handled by DB
+			"latepoint_id": customer.get("latepoint_id"),
 			"square_id": customer.get("square_id"),
 			"first_name": customer["first_name"],
 			"last_name": customer["last_name"],
@@ -74,6 +75,7 @@ def create_db_customer(customer):
 			return cur.fetchone()["id"]
 		except (Exception, psycopg2.Error) as error:
 			print("Error creating customer:", error)
+			send_error_email(str(error))
 			conn.rollback()
 			raise
 		finally:
@@ -103,6 +105,7 @@ def check_email_exists(email):
 			return bool(result)
 		except (Exception, psycopg2.Error) as error:
 			print("Error checking email existence:", error)
+			send_error_email(str(error))
 			raise
 		finally:
 			cur.close()
@@ -172,6 +175,7 @@ def update_latepoint_customer(customer):
 			return result["id"] if result else None
 		except (Exception, psycopg2.Error) as error:
 			print("Error updating customer:", error)
+			send_error_email(str(error))
 			conn.rollback()
 			raise
 		finally:
@@ -198,4 +202,5 @@ def determine_customer_type(email):
 		return "client"
 	except Exception as e:
 		logger.error(f"Error determining customer type: {e}")
+		send_error_email(str(e))
 		return "client"  # Default to client if there's any error
