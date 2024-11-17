@@ -80,10 +80,10 @@ def create_db_customer(customer):
 			cur.close()
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
-	print("Error creating customer:", error)
-	send_error_email(str(error))
-	conn.rollback()
-	raise
+		print("Error creating customer:", error)
+		send_error_email(str(error))
+		conn.rollback()
+		raise
 
 def check_email_exists(email):
 	try:
@@ -108,9 +108,9 @@ def check_email_exists(email):
 			cur.close()
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
-	print("Error checking email existence:", error)
-	send_error_email(str(error))
-	raise
+		print("Error checking email existence:", error)
+		send_error_email(str(error))
+		raise
 
 def update_latepoint_customer(customer):
 	try:
@@ -178,10 +178,10 @@ def update_latepoint_customer(customer):
 			cur.close()
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
-	print("Error updating customer:", error)
-	send_error_email(str(error))
-	conn.rollback()
-	raise
+		print("Error updating customer:", error)
+		send_error_email(str(error))
+		conn.rollback()
+		raise
 		
 def determine_customer_type(email):
 	"""
