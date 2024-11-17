@@ -11,8 +11,8 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-customers_bp = Blueprint("customers", __name__)
-# customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
+# customers_bp = Blueprint("customers", __name__)
+customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
 CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
 CHARLOTTE_FORM_ID = os.getenv("CONVERTKIT_CHARLOTTE_FORM_ID")

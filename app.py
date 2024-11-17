@@ -37,9 +37,11 @@ def print_registered_routes():
 
 # Call it right after all blueprints are registered
 print_registered_routes()
+print(app.url_map)
 
 @app.route("/")
 def home():
+	app.logger.debug("Received request for home route")
 	return "Welcome to Rosedale Massage API"
 	
 @app.errorhandler(Exception)

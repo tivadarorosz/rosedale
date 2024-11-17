@@ -11,8 +11,8 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-appointments_bp = Blueprint("appointments", __name__)
-# appointments_bp = Blueprint("appointments", __name__, url_prefix="/appointments")
+# appointments_bp = Blueprint("appointments", __name__)
+appointments_bp = Blueprint("appointments", __name__, url_prefix="/appointments")
 
 @appointments_bp.route('/new', methods=['POST'])
 def new_appointment():
