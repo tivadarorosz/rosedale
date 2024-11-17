@@ -4,22 +4,25 @@ import os
 import logging
 import traceback
 
+# Create Flask app first
+app = Flask(__name__)
+
 # Configure logging
-app.debug = True
-logging.basicConfig(level=logging.DEBUG)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(
+	level=logging.DEBUG if os.getenv("FLASK_DEBUG") == "1" else logging.INFO,
+	format='%(asctime)s %(levelname)s %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-	
-# Update to use FLASK_DEBUG instead of FLASK_ENV
+# Environment configuration
 if os.getenv("FLASK_DEBUG") == "1":
+	app.debug = True
 	print("Flask Debug is enabled.")
 	# load_dotenv(".env.dev")
 else:
 	load_dotenv()
 
-# Register blueprints - remove duplicate import
+# Register blueprints
 from src.api.endpoints.customers.routes import customers_bp
 app.register_blueprint(customers_bp, url_prefix='/customers')
 
@@ -51,25 +54,26 @@ print(app.url_map)
 def home():
 	app.logger.debug("Received request for home route")
 	return "Welcome to Rosedale Massage API"
-	
+
 @app.errorhandler(Exception)
 def handle_exception(e):
 	# Log the exception
 	logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
-		
+	
 	# Return a generic error message to the user
 	return jsonify({"error": "An unexpected error occurred"}), 500
 
 if __name__ == "__main__":
+	port = int(os.getenv("PORT", 8080))
 	if os.getenv("FLASK_DEBUG") == "1":
 		print("Flask Debug is enabled.")
 		#cert_path = os.path.join('ssl', 'cert.pem')
 		#key_path = os.path.join('ssl', 'key.pem')
 		
 		#if os.path.exists(cert_path) and os.path.exists(key_path):
-		#	app.run(host='0.0.0.0', port=8080, ssl_context=(cert_path, key_path))
+		#    app.run(host='0.0.0.0', port=port, ssl_context=(cert_path, key_path))
 		#else:
-		#	logger.warning("SSL certificates not found, running without SSL")
-	#		app.run(host='0.0.0.0', port=8080)
+		#    logger.warning("SSL certificates not found, running without SSL")
+		app.run(host='0.0.0.0', port=port)
 	else:
-		app.run(host='0.0.0.0', port=8080)
+		app.run(host='0.0.0.0', port=port)
