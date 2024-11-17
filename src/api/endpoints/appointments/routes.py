@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 import os
-from src.api.utils.db_utils_customers import create_customer, check_email_exists, update_latepoint_customer, determine_customer_type
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from src.utils.api_utils import get_gender
 from src.utils.campfire_utils import send_message

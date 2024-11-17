@@ -31,7 +31,9 @@ Table orders {
     id serial [primary key]
     confirmation_code varchar(50) [not null, unique]
     customer_id int [ref: > customers.id, not null]
-    status varchar(50) [not null, note: "Allowed values: 'approved', 'pending_approval', 'cancelled', 'no_show', 'completed'"]
+    latepoint_order_id int [note: "LatePoint order ID, optional"]
+    square_order_id varchar(50) [note: "Square order ID, optional"]
+    status varchar(50) [not null, note: "Allowed values: 'open', 'cancelled', 'completed'"]
     fulfillment_status varchar(50) [note: "e.g., 'fulfilled', 'not_fulfilled'"]
     payment_status varchar(50) [not null, note: "e.g., 'fully_paid', 'partially_paid'"]
     subtotal decimal(10, 2) [not null, note: "Subtotal before discounts, in cents"]
@@ -39,6 +41,7 @@ Table orders {
     customer_comment text [note: "Optional comments from the customer"]
     created_at timestamp [not null, default: "CURRENT_TIMESTAMP", note: "Record creation timestamp"]
     updated_at timestamp [not null, default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", note: "Record last updated timestamp"]
+    note: "Constraint: At least one of latepoint_order_id or square_order_id must not be NULL"
 }
 
 Table order_line_items {
