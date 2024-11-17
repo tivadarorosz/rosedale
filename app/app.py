@@ -1,8 +1,12 @@
-from flask import Flask, jsonify
-from dotenv import load_dotenv
 import os
+import sys
 import logging
 import traceback
+from flask import Flask, jsonify
+from dotenv import load_dotenv
+
+# Add parent directory to Python path to allow imports from src
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Create Flask app first
 app = Flask(__name__)
@@ -17,30 +21,40 @@ logger = logging.getLogger(__name__)
 # Environment configuration
 if os.getenv("FLASK_DEBUG") == "1":
 	app.debug = True
-	print("Flask Debug is enabled.")
-	# load_dotenv(".env.dev")
+	logger.info("Flask Debug is enabled.")
 else:
 	load_dotenv()
 
-# Register blueprints
-from src.api.endpoints.customers.routes import customers_bp
-app.register_blueprint(customers_bp, url_prefix='/customers')
+def register_blueprints():
+	"""Register all blueprints with error handling"""
+	try:
+		logger.debug("Starting blueprint registration")
+		
+		from src.api.endpoints.customers.routes import customers_bp
+		app.register_blueprint(customers_bp, url_prefix='/customers')
+		
+		from src.api.endpoints.transactions.routes import transactions_bp
+		app.register_blueprint(transactions_bp, url_prefix='/transactions')
+		
+		from src.api.endpoints.appointments.routes import appointments_bp
+		app.register_blueprint(appointments_bp, url_prefix='/appointments')
+		
+		from src.api.endpoints.square_api.routes import square_api_bp
+		app.register_blueprint(square_api_bp, url_prefix='/square')
+		
+		logger.debug("Completed blueprint registration")
+	except Exception as e:
+		logger.error(f"Error registering blueprints: {str(e)}")
+		logger.error(traceback.format_exc())
+		raise
 
-from src.api.endpoints.transactions.routes import transactions_bp
-app.register_blueprint(transactions_bp, url_prefix='/transactions')
+# Register blueprints after app creation
+register_blueprints()
 
-from src.api.endpoints.appointments.routes import appointments_bp
-app.register_blueprint(appointments_bp, url_prefix='/appointments')
-
-from src.api.endpoints.square_api.routes import square_api_bp
-app.register_blueprint(square_api_bp, url_prefix='/square')
-
-# Health check endpoint
 @app.route("/healthcheck")
 def healthcheck():
 	return "OK", 200
 
-# Replace before_first_request with a function that runs at startup
 def print_registered_routes():
 	print("\nRegistered Routes:")
 	for rule in app.url_map.iter_rules():
@@ -48,7 +62,6 @@ def print_registered_routes():
 
 # Call it right after all blueprints are registered
 print_registered_routes()
-print(app.url_map)
 
 @app.route("/")
 def home():
@@ -57,12 +70,10 @@ def home():
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-	# Log the exception
 	logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
-	
-	# Return a generic error message to the user
 	return jsonify({"error": "An unexpected error occurred"}), 500
-
+	
+	
 if __name__ == "__main__":
 	port = int(os.getenv("PORT", 8080))
 	if os.getenv("FLASK_DEBUG") == "1":
