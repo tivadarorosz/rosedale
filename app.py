@@ -29,6 +29,11 @@ app.register_blueprint(appointments_bp, url_prefix='/appointments')
 from src.api.endpoints.square_api.routes import square_api_bp
 app.register_blueprint(square_api_bp, url_prefix='/square')
 
+# Health check endpoint
+@app.route("/healthcheck")
+def healthcheck():
+	return "OK", 200
+
 # Replace before_first_request with a function that runs at startup
 def print_registered_routes():
 	print("\nRegistered Routes:")
