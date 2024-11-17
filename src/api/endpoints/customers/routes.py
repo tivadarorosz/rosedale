@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 import os
-from src.api.utils.db_utils_customers import create_db_customer, check_email_exists, update_latepoint_customer, determine_customer_type
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from src.utils.api_utils import get_gender
 from src.utils.campfire_utils import send_message
@@ -8,6 +7,15 @@ from convertkit import ConvertKit
 import requests
 import logging
 import traceback
+from src.api.utils.db_utils_customers import (
+	create_customer, 
+	check_email_exists, 
+	update_latepoint_customer,
+	update_square_customer,
+	validate_latepoint_customer,
+	validate_square_customer,
+	determine_customer_type
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +27,7 @@ CHARLOTTE_FORM_ID = os.getenv("CONVERTKIT_CHARLOTTE_FORM_ID")
 MILLS_FORM_ID = os.getenv("CONVERTKIT_MILLS_FORM_ID")
 
 @customers_bp.route("/new/latepoint", methods=["POST"])
-def create_latepoint_customer():
+def create_or_update_latepoint_customer():
 	try:
 		# Parse incoming request data
 		data = request.form
@@ -32,6 +40,7 @@ def create_latepoint_customer():
 		full_name = data.get("full_name")
 		email = data.get("email")
 		phone = data.get("phone")
+		source = "latepoint"
 
 		if not all([latepoint_id, first_name, last_name, full_name, email, phone]):
 			return jsonify({"error": "Missing required customer fields"}), 400
@@ -70,23 +79,28 @@ def create_latepoint_customer():
 			"has_severe_pain": data.get('custom_fields[cf_R5ffCcvB]') == "on",
 			"customer_notes": data.get('custom_fields[cf_AYXmttXr]'),
 			"newsletter_signup": data.get('custom_fields[cf_13R2jN9C]') == "on",
-			"accepted_terms": data.get('custom_fields[cf_xGQSo978]') == "on"
+			"accepted_terms": data.get('custom_fields[cf_xGQSo978]') == "on",
+			"source": source
 		}
 
 		logger.info(f"Processing customer data: {customer}")
 
+		# Validate customer data
+		if not validate_latepoint_customer(customer):
+			return jsonify({"error": "Missing required Latepoint customer fields"}), 400
+		
 		# Check if customer exists
 		customer_exists = check_email_exists(email)
 		
 		if customer_exists:
-			# Update existing customer
-			logger.info(f"Updating existing customer with email: {email}")
+			# Update existing customer			
+			logger.info(f"Updating existing customer with Latepoint data: {email}")
 			customer_id = update_latepoint_customer(customer)
-			message = "Customer updated successfully"
+			message = "Customer updated successfully with Latepoint data"
 		else:
 			# Create new customer
-			logger.info(f"Creating new customer with email: {email}")
-			customer_id = create_db_customer(customer)
+			logger.info(f"Creating new Latepoint customer: {email}")
+			customer_id = create_customer(customer)
 			
 			# Post a message to Campfire only for new customers
 			try:
@@ -181,6 +195,7 @@ def create_or_update_square_customer():
 		address = data["data"]["object"]["customer"].get("address", {})
 		location = address.get("locality")
 		postcode = address.get("postal_code")
+		source = "square"
 		
 		# Determine gender from first name using Gender API
 		gender = get_gender(first_name)
@@ -203,22 +218,27 @@ def create_or_update_square_customer():
 			"status": "active",
 			"type": customer_type,
 			"newsletter_signup": False,
-			"accepted_terms": False
+			"accepted_terms": False,
+			"source": source
 		}
 
+		# Validate customer data
+		if not validate_square_customer(customer):
+			return jsonify({"error": "Missing required Square customer fields"}), 400
+		
 		# Check if customer exists
 		customer_exists = check_email_exists(email)
 
 		if customer_exists:
-			# Update existing customer with the new square_id
-			logger.info(f"Updating existing customer with email: {email}")
-			customer_id = update_latepoint_customer(customer)
-			message = "Customer updated successfully"
+			# Update existing customer with Square ID only
+			logger.info(f"Updating existing customer with Square ID: {email}")
+			customer_id = update_square_customer(customer)
+			message = "Customer updated successfully with Square ID"
 		else:
 			# Create new customer
-			logger.info(f"Creating new customer with email: {email}")
-			customer["newsletter_signup"] = True
-			customer_id = create_db_customer(customer)
+			# customer["newsletter_signup"] = True
+			logger.info(f"Creating new Square customer: {email}")
+			customer_id = create_customer(customer)
 			message = "Customer created successfully"
 			
 			# Add customer to the newsletter (auto opt-in)

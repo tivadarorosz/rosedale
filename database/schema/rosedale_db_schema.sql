@@ -37,6 +37,7 @@ CREATE TABLE customers (
     CONSTRAINT customer_id_source_chk CHECK (latepoint_id IS NOT NULL OR square_id IS NOT NULL)
 );
 
+-- Create indexes for faster searching
 CREATE INDEX idx_customers_latepoint_id ON customers (latepoint_id);
 CREATE INDEX idx_customers_square_id ON customers (square_id);
 CREATE INDEX idx_customers_email ON customers (email);

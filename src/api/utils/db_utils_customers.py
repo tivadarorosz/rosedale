@@ -7,7 +7,8 @@ from src.utils.email_utils import send_error_email
 
 logger = logging.getLogger(__name__)
 
-if os.getenv("FLASK_ENV") == "development":
+# Environment configuration
+if os.getenv("FLASK_DEBUG") == "1":
 	load_dotenv(".env.dev")
 else:
 	load_dotenv()
@@ -27,7 +28,7 @@ def get_db_connection():
 		send_error_email(str(error))
 		raise
 
-def create_db_customer(customer):
+def create_customer(customer):
 	try:
 		conn = get_db_connection()
 		cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -36,12 +37,12 @@ def create_db_customer(customer):
 			INSERT INTO customers (
 				latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, type, 
 				is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, 
-				newsletter_subscribed, accepted_terms
+				newsletter_subscribed, accepted_terms, source
 			)
 			VALUES (
 				%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, 
 				%(dob)s, %(location)s, %(postcode)s, %(status)s, %(type)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
-				%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s
+				%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s, %(source)s
 			)
 			RETURNING id;
 		"""
@@ -66,7 +67,8 @@ def create_db_customer(customer):
 			"has_bp_issues": customer.get("has_bp_issues", False),
 			"has_severe_pain": customer.get("has_severe_pain", False),
 			"newsletter_subscribed": customer.get("newsletter_signup", False),
-			"accepted_terms": customer.get("accepted_terms", False)
+			"accepted_terms": customer.get("accepted_terms", False),
+			"source": customer.get("source")
 		}
 		
 		try:
@@ -87,35 +89,8 @@ def create_db_customer(customer):
 		conn.rollback()
 		raise
 
-def check_email_exists(email):
-	try:
-		conn = get_db_connection()
-		cur = conn.cursor(cursor_factory=RealDictCursor)
-		
-		query = """
-			SELECT id 
-			FROM customers 
-			WHERE email = %(email)s
-			LIMIT 1;
-		"""
-		
-		try:
-			cur.execute(query, {"email": email})
-			result = cur.fetchone()
-			return bool(result)
-		except (Exception, psycopg2.Error) as error:
-			print("Error checking email existence:", error)
-			send_error_email(str(error))
-			raise
-		finally:
-			cur.close()
-			conn.close()
-	except (Exception, psycopg2.Error) as error:
-		print("Error checking email existence:", error)
-		send_error_email(str(error))
-		raise
-
 def update_latepoint_customer(customer):
+# Update existing customer record with Latepoint data, preserving Square ID if exists. Only updates Latepoint-specific fields.
 	try:
 		conn = get_db_connection()
 		cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -123,6 +98,7 @@ def update_latepoint_customer(customer):
 		query = """
 			UPDATE customers 
 			SET 
+				latepoint_id = %(latepoint_id)s,
 				first_name = %(first_name)s,
 				last_name = %(last_name)s,
 				phone = %(phone)s,
@@ -138,9 +114,12 @@ def update_latepoint_customer(customer):
 				newsletter_subscribed = %(newsletter_subscribed)s,
 				accepted_terms = %(accepted_terms)s,
 				last_updated = CURRENT_TIMESTAMP
+			WHERE email = %(email)s 
+			RETURNING id;
 		"""
 		
 		values = {
+			"latepoint_id": customer["latepoint_id"],
 			"first_name": customer["first_name"],
 			"last_name": customer["last_name"],
 			"email": customer["email"],
@@ -158,23 +137,13 @@ def update_latepoint_customer(customer):
 			"accepted_terms": customer.get("accepted_terms", False)
 		}
 		
-		if customer.get("latepoint_id"):
-			query += ", latepoint_id = %(latepoint_id)s"
-			values["latepoint_id"] = customer["latepoint_id"]
-		
-		if customer.get("square_id"):
-			query += ", square_id = %(square_id)s"
-			values["square_id"] = customer["square_id"]
-		
-		query += " WHERE email = %(email)s RETURNING id;"
-		
 		try:
 			cur.execute(query, values)
 			conn.commit()
 			result = cur.fetchone()
 			return result["id"] if result else None
 		except (Exception, psycopg2.Error) as error:
-			print("Error updating customer:", error)
+			logger.error("Error updating Latepoint customer:", error)
 			send_error_email(str(error))
 			conn.rollback()
 			raise
@@ -182,10 +151,88 @@ def update_latepoint_customer(customer):
 			cur.close()
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
-		print("Error updating customer:", error)
+		logger.error("Error updating Latepoint customer:", error)
 		send_error_email(str(error))
-		conn.rollback()
 		raise
+	
+def update_square_customer(customer):
+	# Update existing customer record with Square ID only. Preserves all other existing customer data.
+	try:
+		conn = get_db_connection()
+		cur = conn.cursor(cursor_factory=RealDictCursor)
+		
+		query = """
+			UPDATE customers 
+			SET 
+				square_id = %(square_id)s,
+				last_updated = CURRENT_TIMESTAMP
+			WHERE email = %(email)s 
+			RETURNING id;
+		"""
+		
+		values = {
+			"square_id": customer["square_id"],
+			"email": customer["email"]
+		}
+		
+		try:
+			cur.execute(query, values)
+			conn.commit()
+			result = cur.fetchone()
+			return result["id"] if result else None
+		except (Exception, psycopg2.Error) as error:
+			logger.error("Error updating Square customer:", error)
+			send_error_email(str(error))
+			conn.rollback()
+			raise
+		finally:
+			cur.close()
+			conn.close()
+	except (Exception, psycopg2.Error) as error:
+		logger.error("Error updating Square customer:", error)
+		send_error_email(str(error))
+		raise
+
+def validate_latepoint_customer(customer):
+	"""Validate required fields for Latepoint customer data."""
+	required_fields = [
+		'latepoint_id', 'first_name', 'last_name', 
+		'email', 'phone', 'gender', 'status', 'type'
+	]
+	return all(customer.get(field) for field in required_fields)
+
+def validate_square_customer(customer):
+	"""Validate required fields for Square customer data."""
+	required_fields = ['square_id', 'email']
+	return all(customer.get(field) for field in required_fields)
+		
+def check_email_exists(email):
+		try:
+			conn = get_db_connection()
+			cur = conn.cursor(cursor_factory=RealDictCursor)
+			
+			query = """
+				SELECT id 
+				FROM customers 
+				WHERE email = %(email)s
+				LIMIT 1;
+			"""
+			
+			try:
+				cur.execute(query, {"email": email})
+				result = cur.fetchone()
+				return bool(result)
+			except (Exception, psycopg2.Error) as error:
+				print("Error checking email existence:", error)
+				send_error_email(str(error))
+				raise
+			finally:
+				cur.close()
+				conn.close()
+		except (Exception, psycopg2.Error) as error:
+			print("Error checking email existence:", error)
+			send_error_email(str(error))
+			raise
 		
 def determine_customer_type(email):
 	"""
