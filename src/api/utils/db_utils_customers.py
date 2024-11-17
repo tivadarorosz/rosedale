@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import logging
+from src.utils.email_utils import send_error_email
 
 logger = logging.getLogger(__name__)
 
@@ -26,81 +27,93 @@ def get_db_connection():
 		raise
 
 def create_db_customer(customer):
-	conn = get_db_connection()
-	cur = conn.cursor(cursor_factory=RealDictCursor)
-	
-	query = """
-		INSERT INTO customers (
-			latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, type, 
-			is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, 
-			newsletter_subscribed, accepted_terms
-		)
-		VALUES (
-			%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, 
-			%(dob)s, %(location)s, %(postcode)s, %(status)s, %(type)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
-			%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s
-		)
-		RETURNING id;
-	"""
-	
-	values = {
-		"latepoint_id": customer.get("latepoint_id"),  # Removed default None as it's handled by DB
-		"square_id": customer.get("square_id"),
-		"first_name": customer["first_name"],
-		"last_name": customer["last_name"],
-		"email": customer["email"],
-		"phone": customer["phone"],
-		"gender": customer["gender"],
-		"dob": customer.get("dob"),
-		"location": customer.get("location"),
-		"postcode": customer.get("postcode"),
-		"status": customer["status"],
-		"type": customer["type"],
-		"is_pregnant": customer.get("is_pregnant", False),
-		"has_cancer": customer.get("has_cancer", False),
-		"has_blood_clots": customer.get("has_blood_clots", False),
-		"has_infectious_disease": customer.get("has_infectious_disease", False),
-		"has_bp_issues": customer.get("has_bp_issues", False),
-		"has_severe_pain": customer.get("has_severe_pain", False),
-		"newsletter_subscribed": customer.get("newsletter_signup", False),
-		"accepted_terms": customer.get("accepted_terms", False)
-	}
-	
 	try:
-		cur.execute(query, values)
-		conn.commit()
-		return cur.fetchone()["id"]
+		conn = get_db_connection()
+		cur = conn.cursor(cursor_factory=RealDictCursor)
+		
+		query = """
+			INSERT INTO customers (
+				latepoint_id, square_id, first_name, last_name, email, phone, gender, dob, location, postcode, status, type, 
+				is_pregnant, has_cancer, has_blood_clots, has_infectious_disease, has_bp_issues, has_severe_pain, 
+				newsletter_subscribed, accepted_terms
+			)
+			VALUES (
+				%(latepoint_id)s, %(square_id)s, %(first_name)s, %(last_name)s, %(email)s, %(phone)s, %(gender)s, 
+				%(dob)s, %(location)s, %(postcode)s, %(status)s, %(type)s, %(is_pregnant)s, %(has_cancer)s, %(has_blood_clots)s, 
+				%(has_infectious_disease)s, %(has_bp_issues)s, %(has_severe_pain)s, %(newsletter_subscribed)s, %(accepted_terms)s
+			)
+			RETURNING id;
+		"""
+		
+		values = {
+			"latepoint_id": customer.get("latepoint_id"),  # Removed default None as it's handled by DB
+			"square_id": customer.get("square_id"),
+			"first_name": customer["first_name"],
+			"last_name": customer["last_name"],
+			"email": customer["email"],
+			"phone": customer["phone"],
+			"gender": customer["gender"],
+			"dob": customer.get("dob"),
+			"location": customer.get("location"),
+			"postcode": customer.get("postcode"),
+			"status": customer["status"],
+			"type": customer["type"],
+			"is_pregnant": customer.get("is_pregnant", False),
+			"has_cancer": customer.get("has_cancer", False),
+			"has_blood_clots": customer.get("has_blood_clots", False),
+			"has_infectious_disease": customer.get("has_infectious_disease", False),
+			"has_bp_issues": customer.get("has_bp_issues", False),
+			"has_severe_pain": customer.get("has_severe_pain", False),
+			"newsletter_subscribed": customer.get("newsletter_signup", False),
+			"accepted_terms": customer.get("accepted_terms", False)
+		}
+		
+		try:
+			cur.execute(query, values)
+			conn.commit()
+			return cur.fetchone()["id"]
+		except (Exception, psycopg2.Error) as error:
+			print("Error creating customer:", error)
+			conn.rollback()
+			raise
+		finally:
+			cur.close()
+			conn.close()
 	except (Exception, psycopg2.Error) as error:
-		print("Error creating customer:", error)
-		conn.rollback()
-		raise
-	finally:
-		cur.close()
-		conn.close()
+	print("Error creating customer:", error)
+	send_error_email(str(error))
+	conn.rollback()
+	raise
 
 def check_email_exists(email):
-	conn = get_db_connection()
-	cur = conn.cursor(cursor_factory=RealDictCursor)
-	
-	query = """
-		SELECT id 
-		FROM customers 
-		WHERE email = %(email)s
-		LIMIT 1;
-	"""
-	
 	try:
-		cur.execute(query, {"email": email})
-		result = cur.fetchone()
-		return bool(result)
+		conn = get_db_connection()
+		cur = conn.cursor(cursor_factory=RealDictCursor)
+		
+		query = """
+			SELECT id 
+			FROM customers 
+			WHERE email = %(email)s
+			LIMIT 1;
+		"""
+		
+		try:
+			cur.execute(query, {"email": email})
+			result = cur.fetchone()
+			return bool(result)
+		except (Exception, psycopg2.Error) as error:
+			print("Error checking email existence:", error)
+			raise
+		finally:
+			cur.close()
+			conn.close()
 	except (Exception, psycopg2.Error) as error:
-		print("Error checking email existence:", error)
-		raise
-	finally:
-		cur.close()
-		conn.close()
+	print("Error checking email existence:", error)
+	send_error_email(str(error))
+	raise
 
 def update_latepoint_customer(customer):
+	try:
 		conn = get_db_connection()
 		cur = conn.cursor(cursor_factory=RealDictCursor)
 		
@@ -164,6 +177,11 @@ def update_latepoint_customer(customer):
 		finally:
 			cur.close()
 			conn.close()
+	except (Exception, psycopg2.Error) as error:
+	print("Error updating customer:", error)
+	send_error_email(str(error))
+	conn.rollback()
+	raise
 		
 def determine_customer_type(email):
 	"""
@@ -178,7 +196,6 @@ def determine_customer_type(email):
 			
 		# Default to regular client
 		return "client"
-		
 	except Exception as e:
 		logger.error(f"Error determining customer type: {e}")
 		return "client"  # Default to client if there's any error

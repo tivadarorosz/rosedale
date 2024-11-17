@@ -4,6 +4,7 @@ import logging
 import traceback
 from flask import Flask, jsonify
 from dotenv import load_dotenv
+from src.utils.email_utils import send_error_email
 
 # Create Flask app first
 app = Flask(__name__)
@@ -64,11 +65,12 @@ print_registered_routes()
 def home():
 	app.logger.debug("Received request for home route")
 	return "Welcome to Rosedale Massage API"
-
+	
 @app.errorhandler(Exception)
-def handle_exception(e):
-	logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
-	return jsonify({"error": "An unexpected error occurred"}), 500
+	def handle_exception(e):
+		logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
+		send_error_email(traceback.format_exc())
+		return jsonify({"error": "An unexpected error occurred"}), 500
 
 if __name__ == "__main__":
 	port = int(os.getenv("PORT", 8080))

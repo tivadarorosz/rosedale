@@ -1,5 +1,6 @@
 import os
 import requests
+from src.utils.email_utils import send_error_email
 
 def get_gender(first_name):
 	try:
@@ -14,8 +15,10 @@ def get_gender(first_name):
 		gender = gender_data["gender"]
 		return gender
 	except requests.exceptions.RequestException as e:
-		logger.error(f"Error getting gender from API: {str(e)}")
-		return "unknown"
+			logger.error(f"Error getting gender from API: {str(e)}")
+			send_error_email(str(e))
+			return "unknown"
 	except Exception as e:
-		logger.error(f"Unexpected error getting gender from API: {str(e)}")
-		return "unknown"
+			logger.error(f"Unexpected error getting gender from API: {str(e)}")
+			send_error_email(str(e))
+			return "unknown"
