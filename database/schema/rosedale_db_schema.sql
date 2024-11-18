@@ -81,16 +81,31 @@ CREATE INDEX idx_order_line_items_item_id ON order_line_items (item_id);
 -- Create items table
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    category VARCHAR(50) NOT NULL,
-    base_price INT NOT NULL,
-    duration INT,
-    description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    external_id VARCHAR(255) NOT NULL UNIQUE, -- Unique identifier from LatePoint or Square
+    name VARCHAR(255) NOT NULL UNIQUE,       -- Name of the item
+    category VARCHAR(50) NOT NULL,           -- Category: service, gift_card, etc.
+    type VARCHAR(50) NOT NULL DEFAULT 'service', -- Top-level classification
+    base_price INT NOT NULL,                 -- Price in the smallest currency unit (e.g., pennies)
+    duration INT,                            -- Duration in minutes (only for services)
+    description TEXT,                        -- Detailed description of the item
+    source VARCHAR(20) NOT NULL,             -- The origin: latepoint or square or acuity
+    status VARCHAR(10) NOT NULL DEFAULT 'active', -- Status: 'active' or 'inactive'
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Record creation timestamp
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Last updated timestamp
+    CHECK (source IN ('latepoint', 'square', 'acuity')), -- Ensure source is valid
+    CHECK (type IN ('service', 'gift_card', 'package', 'product')), -- Valid values for type
+    CHECK (status IN ('active', 'inactive'))  -- Ensure status is valid
 );
 
-CREATE INDEX idx_items_name ON items (name);
+-- Create composite index
+CREATE INDEX idx_composite_items ON items (id, external_id, name, source);
+
+-- or
+CREATE INDEX idx_id ON items (id);
+CREATE INDEX idx_external_id ON items (external_id);
+CREATE INDEX idx_name ON items (name);
+CREATE INDEX idx_source ON items (source);
+CREATE INDEX idx_status ON items (status);
 
 -- Create appointments table
 CREATE TABLE appointments (

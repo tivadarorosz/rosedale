@@ -57,14 +57,25 @@ Table order_line_items {
 }
 
 Table items {
-    id serial [primary key]
-    name varchar(255) [not null, unique, note: "Name of the item, e.g., 'Swedish Massage'"]
-    category varchar(50) [not null, note: "Category of the item, e.g., 'service', 'gift_card', 'product'"]
+    id serial [primary key, note: "Unique identifier for each item"]
+    external_id varchar(255) [not null, unique, note: "Identifier from LatePoint, Square or Acuity"]
+    name varchar(255) [not null, unique, note: "Name of the item, e.g., 'Swedish Massage', 'Gift Card'"]
+    type varchar(50) [not null, note: "Top-level classification, e.g., 'service', 'gift_card', 'package', 'product'"]
+    category varchar(50) [not null, note: "Detailed category, e.g., 'swedish blossom', 'deep tissue'"]
     base_price int [not null, note: "Base price of the item in cents"]
     duration int [note: "Duration in minutes, for services"]
     description text [note: "Detailed description of the item"]
+    source varchar(20) [not null, note: "The origin system: 'latepoint' or 'square'"]
+    status varchar(10) [not null, default: 'active', note: "Status of the item: 'active' or 'inactive'"]
     created_at timestamp [not null, default: "CURRENT_TIMESTAMP", note: "Record creation timestamp"]
     updated_at timestamp [not null, default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", note: "Record last updated timestamp"]
+
+    Indexes {
+        (external_id) [unique]
+        (name) [unique]
+        (source)
+        (status)
+    }
 }
 
 Table appointments {

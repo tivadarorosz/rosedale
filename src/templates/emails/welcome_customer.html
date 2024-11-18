@@ -1,0 +1,38 @@
+<div>
+	<h2>Welcome to Rosedale Massage!</h2>
+
+	<p>Dear {{name}},</p>
+
+	<p>Thank you for choosing Rosedale Massage. We're delighted to welcome you to our wellness community and look forward to helping you achieve your wellness goals.</p>
+
+	<h3>Your Journey to Wellness Begins Here</h3>
+	<p>At Rosedale Massage, we offer a range of therapeutic treatments tailored to your needs. Whether you're looking for relaxation, pain relief, or stress management, our experienced therapists are here to help.</p>
+
+	<h3>Ready to Experience Relaxation?</h3>
+	<p>Book your first massage session easily online:</p>
+	<p><a href="{{booking_url}}" class="button">Book Your First Session</a></p>
+
+	{% if not newsletter_subscribed %}
+	<h3>Stay Connected</h3>
+	<p>Join our wellness community to receive:</p>
+	<ul>
+		<li>Exclusive offers for new clients</li>
+		<li>Monthly wellness tips and self-care advice</li>
+		<li>Updates on new services and treatments</li>
+		<li>Early access to special promotions</li>
+	</ul>
+	
+	<p><a href="{{newsletter_signup_url}}" class="button">Join Our Wellness Community</a></p>
+	{% endif %}
+
+	<p>Connect with us on social media for daily wellness inspiration:</p>
+	<ul>
+		<li>Instagram: <a href="https://instagram.com/rosedalemassage">@rosedalemassage</a></li>
+		<li>Facebook: <a href="https://facebook.com/rosedalemassage">@rosedalemassage</a></li>
+	</ul>
+
+	<p>If you have any questions, our team is here to help. Feel free to reach out to us at <a href="mailto:hello@rosedalemassage.co.uk">hello@rosedalemassage.co.uk</a>.</p>
+
+	<p>Best wishes,<br>
+	The Rosedale Massage Team</p>
+</div>
