@@ -1,6 +1,9 @@
 import os
 import requests
-from src.utils.email_utils import send_error_email
+import logging
+from src.utils.error_monitoring import handle_error
+
+logger = logging.getLogger(__name__)
 
 def get_gender(first_name):
 	try:
@@ -15,10 +18,10 @@ def get_gender(first_name):
 		gender = gender_data["gender"]
 		return gender
 	except requests.exceptions.RequestException as e:
-			logger.error(f"Error getting gender from API: {str(e)}")
-			send_error_email(str(e))
-			return "unknown"
+		logger.error(f"Error getting gender from API: {str(e)}")
+		handle_error(e, f"Gender API error for name: {first_name}")
+		return "unknown"
 	except Exception as e:
-			logger.error(f"Unexpected error getting gender from API: {str(e)}")
-			send_error_email(str(e))
-			return "unknown"
+		logger.error(f"Unexpected error getting gender from API: {str(e)}")
+		handle_error(e, f"Unexpected gender API error for name: {first_name}")
+		return "unknown"
