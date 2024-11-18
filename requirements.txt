@@ -12,3 +12,6 @@ squareup==38.2.0.20241017  # Keep this, remove the old 'square' package
 
 # Optional dependencies (if needed)
 python-dateutil==2.8.2
+
+# Sentry alerting and monitoring
+sentry-sdk[flask]==1.39.1

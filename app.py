@@ -4,7 +4,7 @@ import logging
 import traceback
 from flask import Flask, jsonify
 from dotenv import load_dotenv
-from src.utils.email_utils import send_error_email
+from src.utils.error_monitoring import initialize_sentry, handle_error
 
 # Create Flask app first
 app = Flask(__name__)
@@ -22,6 +22,7 @@ if os.getenv("FLASK_DEBUG") == "1":
 	logger.info("Flask Debug is enabled.")
 else:
 	load_dotenv()
+	initialize_sentry()  # Initialise Sentry in production
 
 def register_blueprints():
 	"""Register all blueprints with error handling"""
@@ -44,6 +45,7 @@ def register_blueprints():
 	except Exception as e:
 		logger.error(f"Error registering blueprints: {str(e)}")
 		logger.error(traceback.format_exc())
+		handle_error(e, "Error registering blueprints")
 		raise
 
 # Register blueprints after app creation
@@ -68,21 +70,16 @@ def home():
 	
 @app.errorhandler(Exception)
 def handle_exception(e):
-	logger.error("An unexpected error occurred:\n%s", traceback.format_exc())
-	send_error_email(traceback.format_exc())
+	"""Global exception handler"""
+	error_details = traceback.format_exc()
+	logger.error("An unexpected error occurred:\n%s", error_details)
+	handle_error(e, "Unhandled exception in application")
 	return jsonify({"error": "An unexpected error occurred"}), 500
 
 if __name__ == "__main__":
 	port = int(os.getenv("PORT", 8080))
 	if os.getenv("FLASK_DEBUG") == "1":
 		print("Flask Debug is enabled.")
-		#cert_path = os.path.join('ssl', 'cert.pem')
-		#key_path = os.path.join('ssl', 'key.pem')
-		
-		#if os.path.exists(cert_path) and os.path.exists(key_path):
-		#    app.run(host='0.0.0.0', port=port, ssl_context=(cert_path, key_path))
-		#else:
-		#    logger.warning("SSL certificates not found, running without SSL")
 		app.run(host='0.0.0.0', port=port)
 	else:
 		app.run(host='0.0.0.0', port=port)

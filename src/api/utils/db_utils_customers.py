@@ -3,7 +3,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import logging
-from src.utils.email_utils import send_error_email
+from src.utils.error_monitoring import handle_error
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def get_db_connection():
 		return conn
 	except (Exception, psycopg2.Error) as error:
 		print("Error connecting to the database:", error)
-		send_error_email(str(error))
+		handle_error(error, "Database operation error")
 		raise
 
 def create_customer(customer):
@@ -77,7 +77,7 @@ def create_customer(customer):
 			return cur.fetchone()["id"]
 		except (Exception, psycopg2.Error) as error:
 			print("Error creating customer:", error)
-			send_error_email(str(error))
+			handle_error(error, "Database operation error")
 			conn.rollback()
 			raise
 		finally:
@@ -85,7 +85,7 @@ def create_customer(customer):
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
 		print("Error creating customer:", error)
-		send_error_email(str(error))
+		handle_error(error, "Database operation error")
 		conn.rollback()
 		raise
 
@@ -144,7 +144,7 @@ def update_latepoint_customer(customer):
 			return result["id"] if result else None
 		except (Exception, psycopg2.Error) as error:
 			logger.error("Error updating Latepoint customer:", error)
-			send_error_email(str(error))
+			handle_error(error, "Database operation error")
 			conn.rollback()
 			raise
 		finally:
@@ -152,7 +152,7 @@ def update_latepoint_customer(customer):
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
 		logger.error("Error updating Latepoint customer:", error)
-		send_error_email(str(error))
+		handle_error(error, "Database operation error")
 		raise
 	
 def update_square_customer(customer):
@@ -182,7 +182,7 @@ def update_square_customer(customer):
 			return result["id"] if result else None
 		except (Exception, psycopg2.Error) as error:
 			logger.error("Error updating Square customer:", error)
-			send_error_email(str(error))
+			handle_error(error, "Database operation error")
 			conn.rollback()
 			raise
 		finally:
@@ -190,7 +190,7 @@ def update_square_customer(customer):
 			conn.close()
 	except (Exception, psycopg2.Error) as error:
 		logger.error("Error updating Square customer:", error)
-		send_error_email(str(error))
+		handle_error(error, "Database operation error")
 		raise
 
 def validate_latepoint_customer(customer):
@@ -224,14 +224,14 @@ def check_email_exists(email):
 				return bool(result)
 			except (Exception, psycopg2.Error) as error:
 				print("Error checking email existence:", error)
-				send_error_email(str(error))
+				handle_error(error, "Database operation error")
 				raise
 			finally:
 				cur.close()
 				conn.close()
 		except (Exception, psycopg2.Error) as error:
 			print("Error checking email existence:", error)
-			send_error_email(str(error))
+			handle_error(error, "Database operation error")
 			raise
 		
 def determine_customer_type(email):
@@ -249,5 +249,5 @@ def determine_customer_type(email):
 		return "client"
 	except Exception as e:
 		logger.error(f"Error determining customer type: {e}")
-		send_error_email(str(e))
+		handle_error(error, "Database operation error")
 		return "client"  # Default to client if there's any error

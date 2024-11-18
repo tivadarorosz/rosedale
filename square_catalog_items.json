@@ -1,0 +1,412 @@
+[
+    {
+        "type": "ITEM",
+        "id": "FK5MUIABGQBQUPXXWBICK5XR",
+        "updated_at": "2024-11-17T22:44:44.009Z",
+        "created_at": "2024-11-17T22:42:51.648Z",
+        "version": 1731883484009,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Digital Gift Card",
+            "description": "Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "LCXGJDYD6DFBHJKBKLV4BR75",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "60-Minute Massage \u2013 \u00a365",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 6500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "ZDTCTRW3URLYVBOCRHK7UBXG",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "90-Minute Massage \u2013 \u00a395",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 9500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "2MAC3YF5FGM7KO4SQTETQ5NQ",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "110-Minute Massage \u2013 \u00a3115",
+                        "ordinal": 3,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 11500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "3FJ5VL3KHDLB5NBYS4HN3XRT",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "110-Minute Massage with Add-Ons \u2013 \u00a3150",
+                        "ordinal": 4,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 15000,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "HIDDEN",
+            "image_ids": [
+                "VZ2SH6HV66T3VYHM3Q622G5N"
+            ],
+            "categories": [
+                {
+                    "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                    "ordinal": -2251799813685248
+                }
+            ],
+            "description_html": "<p>Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.</p>",
+            "description_plaintext": "Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.",
+            "shipping_fulfillment_preferences_id": "fprefs_12867e0n8ldug1qd4dcfm0idn",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                "ordinal": -2251799813685248
+            }
+        }
+    },
+    {
+        "type": "ITEM",
+        "id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+        "updated_at": "2024-11-17T22:44:44.009Z",
+        "created_at": "2024-11-10T15:45:20.4Z",
+        "version": 1731883484009,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Premium Gift Card",
+            "description": "Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "GDWPS3LJLXVUU5MJD6SHAI7D",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-10T15:45:20.4Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "60-Minute Massage \u2013 \u00a365",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 6500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "7OHO3KSG2VNNES7TIGVUYFEY",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:50:54.143Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "90-Minute Massage \u2013 \u00a395",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 9500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "OI47FFHYLOI2IZGYYI6KBNYO",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:58:54.525Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "110-Minute Massage \u2013 \u00a3115",
+                        "ordinal": 3,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 11500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "XLJTZZJLVIXOXPEHNBTDV524",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:58:54.525Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "110-Minute Massage with Add-Ons \u2013 \u00a3150",
+                        "ordinal": 4,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 15000,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "VISIBLE",
+            "image_ids": [
+                "VZ2SH6HV66T3VYHM3Q622G5N"
+            ],
+            "categories": [
+                {
+                    "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                    "ordinal": -2251765453946880
+                }
+            ],
+            "description_html": "<p>Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.</p>",
+            "description_plaintext": "Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.",
+            "shipping_fulfillment_preferences_id": "fprefs_1285yp46kwvaj86xcxa0rnkkt",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                "ordinal": -2251765453946880
+            }
+        }
+    },
+    {
+        "type": "ITEM",
+        "id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+        "updated_at": "2024-11-17T22:46:36.061Z",
+        "created_at": "2024-11-15T13:54:39.084Z",
+        "version": 1731883596061,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Unlimited Massage Package",
+            "description": "Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "E4KPV5RQ63WZSZRHFUHSIUZY",
+                    "updated_at": "2024-11-17T22:46:36.061Z",
+                    "created_at": "2024-11-15T14:23:27.545Z",
+                    "version": 1731883596061,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+                        "name": "60-Minute Unlimited Package",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 52900,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "sellable": true,
+                        "stockable": true
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "4SAETMMJKWEMZCLW3DRV5EZI",
+                    "updated_at": "2024-11-17T22:46:36.061Z",
+                    "created_at": "2024-11-15T13:54:39.084Z",
+                    "version": 1731883596061,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+                        "name": "90-Minute Unlimited Package",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 62900,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "sellable": true,
+                        "stockable": true
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "HIDDEN",
+            "image_ids": [
+                "M4A5UJ5SVEDMYUSCDCCN6RDR"
+            ],
+            "categories": [
+                {
+                    "id": "AK2KP6VQLWJNOJVL76FFSHEB",
+                    "ordinal": -2251799813685248
+                }
+            ],
+            "description_html": "<p>Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.</p>",
+            "description_plaintext": "Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "AK2KP6VQLWJNOJVL76FFSHEB",
+                "ordinal": -2251799813685248
+            }
+        }
+    }
+]

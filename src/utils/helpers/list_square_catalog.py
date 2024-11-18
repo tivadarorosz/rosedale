@@ -1,62 +1,69 @@
 import os
-import csv
 import requests
+import json
 from dotenv import load_dotenv
 
-# Load environment variables from a .env file
+# Load environment variables from .env file
 load_dotenv()
 
-# Fetch Square access token
+# Fetch environment variables
 SQUARE_ACCESS_TOKEN = os.getenv("SQUARE_ACCESS_TOKEN")
 
-def list_square_catalog():
-	"""Fetch all Square catalog objects."""
-	url = "https://connect.squareup.com/v2/catalog/list"
+# Square API Endpoint
+SEARCH_CATALOG_ITEMS_URL = "https://connect.squareup.com/v2/catalog/search-catalog-items"
+
+# Function to search all catalog items
+def search_catalog_items():
 	headers = {
 		"Authorization": f"Bearer {SQUARE_ACCESS_TOKEN}",
 		"Content-Type": "application/json",
 	}
 
-	# Send the request
-	response = requests.get(url, headers=headers)
-	if response.status_code != 200:
-		raise Exception(f"Error fetching Square catalog: {response.text}")
+	# Request payload
+	payload = {
+		"limit": 100,  # Adjust the limit if you expect more results per request
+	}
 
-	# Parse response JSON
-	data = response.json()
-	return data.get("objects", [])
+	all_items = []
+	cursor = None
 
-def save_catalog_to_csv(catalog_objects, output_file="square_catalog.csv"):
-	"""Save catalog objects to a CSV file."""
-	if not catalog_objects:
-		print("No catalog objects found.")
-		return
+	while True:
+		if cursor:
+			payload["cursor"] = cursor
 
-	# Extract all unique keys for the CSV header
-	keys = set()
-	for obj in catalog_objects:
-		keys.update(obj.keys())
+		response = requests.post(SEARCH_CATALOG_ITEMS_URL, headers=headers, json=payload)
 
-	# Write the catalog objects to CSV
-	with open(output_file, mode="w", newline="", encoding="utf-8") as csvfile:
-		writer = csv.DictWriter(csvfile, fieldnames=list(keys))
-		writer.writeheader()
+		if response.status_code != 200:
+			print("Error fetching catalog items:", response.text)
+			break
 
-		for obj in catalog_objects:
-			writer.writerow(obj)
+		data = response.json()
 
-	print(f"Catalog objects saved to {output_file}")
+		# Append fetched items to the list
+		all_items.extend(data.get("items", []))
 
+		# Check if there is a next page
+		cursor = data.get("cursor")
+		if not cursor:
+			break
+
+	return all_items
+
+# Main function
 def main():
 	try:
-		print("Fetching catalog objects from Square...")
-		catalog_objects = list_square_catalog()
-		print(f"Fetched {len(catalog_objects)} catalog objects.")
+		print("Fetching Square catalog items...")
+		items = search_catalog_items()
+		print(f"Retrieved {len(items)} items from the Square catalog.")
 
-		print("Saving catalog objects to CSV...")
-		save_catalog_to_csv(catalog_objects)
+		# Save to JSON file
+		output_file = "square_catalog_items.json"
+		with open(output_file, "w") as f:
+			json.dump(items, f, indent=4)
+		print(f"Catalog items saved to {output_file}")
+
 	except Exception as e:
-		print(f"Error: {e}")
+		print("Error:", e)
 
 if __name__ == "__main__":
 	main()

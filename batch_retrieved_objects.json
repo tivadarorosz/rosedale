@@ -1,0 +1,677 @@
+[
+    {
+        "type": "PRODUCT_SET",
+        "id": "52GCHT3U2PTWFB662YQ6SFUQ",
+        "updated_at": "2023-09-11T14:35:40.139Z",
+        "created_at": "2023-09-11T14:35:40.139Z",
+        "version": 1694442940139,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "product_set_data": {
+            "all_products": true,
+            "match_custom_amounts": true
+        }
+    },
+    {
+        "type": "TAX",
+        "id": "5YP6CDHEIM45MJD7DDJBZXGK",
+        "updated_at": "2023-09-11T14:35:40.139Z",
+        "created_at": "2023-09-11T14:35:40.139Z",
+        "version": 1694442940139,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "tax_data": {
+            "name": "VAT",
+            "calculation_phase": "TAX_SUBTOTAL_PHASE",
+            "inclusion_type": "INCLUSIVE",
+            "percentage": "20.0",
+            "applies_to_custom_amounts": true,
+            "enabled": true,
+            "tax_type_id": "vat",
+            "tax_type_name": "VAT",
+            "applies_to_product_set_id": "52GCHT3U2PTWFB662YQ6SFUQ"
+        }
+    },
+    {
+        "type": "QUICK_AMOUNTS_SETTINGS",
+        "id": "ODPVEJMYEU75DA6XFXLSIDGA",
+        "updated_at": "2024-06-28T08:55:24.121Z",
+        "created_at": "2024-06-28T08:55:24.152Z",
+        "version": 1719564924121,
+        "is_deleted": false,
+        "present_at_all_locations": false,
+        "present_at_location_ids": [
+            "LF987690Q4Y8F"
+        ],
+        "quick_amounts_settings_data": {
+            "option": "DISABLED",
+            "eligible_for_auto_amounts": false
+        }
+    },
+    {
+        "type": "CUSTOM_ATTRIBUTE_DEFINITION",
+        "id": "N2D64XUOOGCPXX56WJFDFVUR",
+        "updated_at": "2024-07-30T05:55:07.926Z",
+        "created_at": "2024-07-30T05:55:07.961Z",
+        "version": 1722318907926,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "custom_attribute_definition_data": {
+            "type": "BOOLEAN",
+            "name": "Is Alcoholic",
+            "description": "Enabling this toggle on an item indicates that it contains alcohol.",
+            "source_application": {
+                "application_id": "sq0idp-w46nJ_NCNDMSOywaCY0mwA",
+                "name": "Square Online Store"
+            },
+            "allowed_object_types": [
+                "ITEM"
+            ],
+            "seller_visibility": "SELLER_VISIBILITY_READ_WRITE_VALUES",
+            "app_visibility": "APP_VISIBILITY_HIDDEN",
+            "key": "is_alcoholic"
+        }
+    },
+    {
+        "type": "CUSTOM_ATTRIBUTE_DEFINITION",
+        "id": "EJWTRFSOQWI26RXL2ZJA44OA",
+        "updated_at": "2024-07-30T05:55:08.109Z",
+        "created_at": "2024-07-30T05:55:08.15Z",
+        "version": 1722318908109,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "custom_attribute_definition_data": {
+            "type": "STRING",
+            "name": "Ecom Storefront Classic Site ID",
+            "description": "Ecommerce bridge target storefront classic site ID. Used to create site-item associations after copying items.",
+            "source_application": {
+                "application_id": "sq0idp-w46nJ_NCNDMSOywaCY0mwA",
+                "name": "Square Online Store"
+            },
+            "allowed_object_types": [
+                "ITEM"
+            ],
+            "seller_visibility": "SELLER_VISIBILITY_HIDDEN",
+            "app_visibility": "APP_VISIBILITY_HIDDEN",
+            "string_config": {
+                "enforce_uniqueness": false
+            },
+            "key": "ecom_target_classic_site_id"
+        }
+    },
+    {
+        "type": "CUSTOM_ATTRIBUTE_DEFINITION",
+        "id": "VKITEZKJUC7ONFXF3RMA5MFX",
+        "updated_at": "2024-10-12T13:11:07.246Z",
+        "created_at": "2024-10-12T13:11:07.297Z",
+        "version": 1728738667246,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "custom_attribute_definition_data": {
+            "type": "BOOLEAN",
+            "name": "Ecom Gifting Enabled",
+            "description": "Enables the item to be sold as a gift on Square Online.",
+            "source_application": {
+                "application_id": "sq0idp-w46nJ_NCNDMSOywaCY0mwA",
+                "name": "Square Online Store"
+            },
+            "allowed_object_types": [
+                "ITEM"
+            ],
+            "seller_visibility": "SELLER_VISIBILITY_READ_WRITE_VALUES",
+            "app_visibility": "APP_VISIBILITY_READ_WRITE_VALUES",
+            "key": "ecom_gifting_enabled"
+        }
+    },
+    {
+        "type": "DISCOUNT",
+        "id": "XMRVVNUD5RA27DIRSX5S3Q5C",
+        "updated_at": "2024-10-25T08:41:10.231Z",
+        "created_at": "2024-10-25T08:40:55.012Z",
+        "version": 1729845670231,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "discount_data": {
+            "name": "24CALM20",
+            "discount_type": "FIXED_PERCENTAGE",
+            "percentage": "20.0",
+            "application_method": "MANUALLY_APPLIED",
+            "modify_tax_basis": "MODIFY_TAX_BASIS"
+        }
+    },
+    {
+        "type": "PRODUCT_SET",
+        "id": "S275IWFEQTYDKOIFSLVMLOVQ",
+        "updated_at": "2024-10-25T08:49:18.513Z",
+        "created_at": "2024-10-25T08:49:18.547Z",
+        "version": 1729846158513,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "product_set_data": {
+            "name": "Coupons MATCH_ALL Product Set",
+            "all_products": true
+        }
+    },
+    {
+        "type": "PRICING_RULE",
+        "id": "4VMORVNFIPFOLPXIQSCQ5ONT",
+        "updated_at": "2024-10-25T08:49:59.633Z",
+        "created_at": "2024-10-25T08:49:18.547Z",
+        "version": 1729846199633,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "pricing_rule_data": {
+            "name": "Get 20% off the next time you visit! \u2014 24CALM20",
+            "discount_id": "EOE6UD6W6JXSZGWKKPWHBAJI",
+            "match_products_id": "S275IWFEQTYDKOIFSLVMLOVQ",
+            "stackable": "STACKABLE",
+            "application_mode": "ATTACHED",
+            "discount_target_scope": "WHOLE_PURCHASE",
+            "max_applications_per_attachment": 1
+        }
+    },
+    {
+        "type": "DISCOUNT",
+        "id": "EOE6UD6W6JXSZGWKKPWHBAJI",
+        "updated_at": "2024-10-25T08:49:59.633Z",
+        "created_at": "2024-10-25T08:49:18.547Z",
+        "version": 1729846199633,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "discount_data": {
+            "name": "Get 20% off the next time you visit! \u2014 24CALM20",
+            "discount_type": "FIXED_PERCENTAGE",
+            "percentage": "20.0",
+            "pin_required": false,
+            "application_method": "MANUALLY_APPLIED",
+            "modify_tax_basis": "MODIFY_TAX_BASIS"
+        }
+    },
+    {
+        "type": "ITEM",
+        "id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+        "updated_at": "2024-11-17T22:44:44.009Z",
+        "created_at": "2024-11-10T15:45:20.4Z",
+        "version": 1731883484009,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Premium Gift Card",
+            "description": "Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "GDWPS3LJLXVUU5MJD6SHAI7D",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-10T15:45:20.4Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "60-Minute Massage \u2013 \u00a365",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 6500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "7OHO3KSG2VNNES7TIGVUYFEY",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:50:54.143Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "90-Minute Massage \u2013 \u00a395",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 9500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "OI47FFHYLOI2IZGYYI6KBNYO",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:58:54.525Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "110-Minute Massage \u2013 \u00a3115",
+                        "ordinal": 3,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 11500,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "XLJTZZJLVIXOXPEHNBTDV524",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-11T19:58:54.525Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "JVY5BIISNZKAIXAS2MGDJBJ3",
+                        "name": "110-Minute Massage with Add-Ons \u2013 \u00a3150",
+                        "ordinal": 4,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 15000,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "VISIBLE",
+            "image_ids": [
+                "VZ2SH6HV66T3VYHM3Q622G5N"
+            ],
+            "categories": [
+                {
+                    "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                    "ordinal": -2251765453946880
+                }
+            ],
+            "description_html": "<p>Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.</p>",
+            "description_plaintext": "Give the gift of a premium massage experience with our luxury matte gift card. Choose your desired amount, and we\u2019ll present it beautifully for any occasion. Shipping is free in the UK, with most cards shipped the next day and expected to arrive in 2-3 days.",
+            "shipping_fulfillment_preferences_id": "fprefs_1285yp46kwvaj86xcxa0rnkkt",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                "ordinal": -2251765453946880
+            }
+        }
+    },
+    {
+        "type": "ITEM",
+        "id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+        "updated_at": "2024-11-17T22:46:36.061Z",
+        "created_at": "2024-11-15T13:54:39.084Z",
+        "version": 1731883596061,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Unlimited Massage Package",
+            "description": "Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "E4KPV5RQ63WZSZRHFUHSIUZY",
+                    "updated_at": "2024-11-17T22:46:36.061Z",
+                    "created_at": "2024-11-15T14:23:27.545Z",
+                    "version": 1731883596061,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+                        "name": "60-Minute Unlimited Package",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 52900,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "sellable": true,
+                        "stockable": true
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "4SAETMMJKWEMZCLW3DRV5EZI",
+                    "updated_at": "2024-11-17T22:46:36.061Z",
+                    "created_at": "2024-11-15T13:54:39.084Z",
+                    "version": 1731883596061,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "HEHFFO2HRWX6J3TA4P44FQ3D",
+                        "name": "90-Minute Unlimited Package",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 62900,
+                            "currency": "GBP"
+                        },
+                        "location_overrides": [
+                            {
+                                "location_id": "LF987690Q4Y8F",
+                                "track_inventory": false
+                            }
+                        ],
+                        "track_inventory": false,
+                        "sellable": true,
+                        "stockable": true
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "HIDDEN",
+            "image_ids": [
+                "M4A5UJ5SVEDMYUSCDCCN6RDR"
+            ],
+            "categories": [
+                {
+                    "id": "AK2KP6VQLWJNOJVL76FFSHEB",
+                    "ordinal": -2251799813685248
+                }
+            ],
+            "description_html": "<p>Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.</p>",
+            "description_plaintext": "Experience ultimate relaxation with our exclusive Unlimited Massage Package. Choose between 60-minute or 90-minute sessions and enjoy up to two weekly massages for an entire year. Perfect for prioritising your well-being or giving as a premium gift.",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "AK2KP6VQLWJNOJVL76FFSHEB",
+                "ordinal": -2251799813685248
+            }
+        }
+    },
+    {
+        "type": "CUSTOM_ATTRIBUTE_DEFINITION",
+        "id": "PQRP4HOVE6BFEBZ5LQKB5Z56",
+        "updated_at": "2024-11-15T14:19:37.211Z",
+        "created_at": "2024-11-15T14:19:37.251Z",
+        "version": 1731680377211,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "custom_attribute_definition_data": {
+            "type": "SELECTION",
+            "name": "Card Type",
+            "source_application": {
+                "application_id": "Square"
+            },
+            "allowed_object_types": [
+                "ITEM",
+                "ITEM_VARIATION"
+            ],
+            "seller_visibility": "SELLER_VISIBILITY_READ_WRITE_VALUES",
+            "app_visibility": "APP_VISIBILITY_READ_WRITE_VALUES",
+            "selection_config": {
+                "max_allowed_selections": 1,
+                "allowed_selections": [
+                    {
+                        "uid": "4IGG2WVY5RXPPMD2JCP3ZFCS",
+                        "name": "60-minute"
+                    },
+                    {
+                        "uid": "Z4N5AFHFOVDQRDIMY3UPQIBS",
+                        "name": "90-minute"
+                    }
+                ]
+            },
+            "key": "0883b220-1259-417f-9f4f-a603865861ed"
+        }
+    },
+    {
+        "type": "ITEM",
+        "id": "FK5MUIABGQBQUPXXWBICK5XR",
+        "updated_at": "2024-11-17T22:44:44.009Z",
+        "created_at": "2024-11-17T22:42:51.648Z",
+        "version": 1731883484009,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "item_data": {
+            "name": "Digital Gift Card",
+            "description": "Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.",
+            "is_taxable": true,
+            "visibility": "PRIVATE",
+            "tax_ids": [
+                "5YP6CDHEIM45MJD7DDJBZXGK"
+            ],
+            "variations": [
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "LCXGJDYD6DFBHJKBKLV4BR75",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "60-Minute Massage \u2013 \u00a365",
+                        "ordinal": 1,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 6500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "ZDTCTRW3URLYVBOCRHK7UBXG",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "90-Minute Massage \u2013 \u00a395",
+                        "ordinal": 2,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 9500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "2MAC3YF5FGM7KO4SQTETQ5NQ",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "110-Minute Massage \u2013 \u00a3115",
+                        "ordinal": 3,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 11500,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                },
+                {
+                    "type": "ITEM_VARIATION",
+                    "id": "3FJ5VL3KHDLB5NBYS4HN3XRT",
+                    "updated_at": "2024-11-17T22:44:43.4Z",
+                    "created_at": "2024-11-17T22:42:51.648Z",
+                    "version": 1731883483400,
+                    "is_deleted": false,
+                    "present_at_all_locations": true,
+                    "item_variation_data": {
+                        "item_id": "FK5MUIABGQBQUPXXWBICK5XR",
+                        "name": "110-Minute Massage with Add-Ons \u2013 \u00a3150",
+                        "ordinal": 4,
+                        "pricing_type": "FIXED_PRICING",
+                        "price_money": {
+                            "amount": 15000,
+                            "currency": "GBP"
+                        },
+                        "track_inventory": false,
+                        "inventory_alert_type": "NONE",
+                        "sellable": true,
+                        "stockable": true,
+                        "image_ids": [
+                            "VZ2SH6HV66T3VYHM3Q622G5N"
+                        ]
+                    }
+                }
+            ],
+            "product_type": "LEGACY_SQUARE_ONLINE_SERVICE",
+            "skip_modifier_screen": false,
+            "ecom_available": true,
+            "ecom_visibility": "HIDDEN",
+            "image_ids": [
+                "VZ2SH6HV66T3VYHM3Q622G5N"
+            ],
+            "categories": [
+                {
+                    "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                    "ordinal": -2251799813685248
+                }
+            ],
+            "description_html": "<p>Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.</p>",
+            "description_plaintext": "Surprise your loved ones with the perfect gift\u2014an instantly delivered digital gift card for premium massage experiences. Choose from a range of values to suit any occasion, and let them indulge in relaxation at its finest. Digital delivery makes it easy, and they can redeem it at their convenience.",
+            "shipping_fulfillment_preferences_id": "fprefs_12867e0n8ldug1qd4dcfm0idn",
+            "is_archived": false,
+            "reporting_category": {
+                "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+                "ordinal": -2251799813685248
+            }
+        }
+    },
+    {
+        "type": "CATEGORY",
+        "id": "E5XYAHTVDRYCNVNQ5XEOMHQE",
+        "updated_at": "2024-11-17T22:45:24.126Z",
+        "created_at": "2024-11-17T22:44:43.46Z",
+        "version": 1731883524126,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "category_data": {
+            "name": "Gift Card",
+            "category_type": "REGULAR_CATEGORY",
+            "parent_category": {
+                "ordinal": -2251731094208512
+            },
+            "is_top_level": true,
+            "online_visibility": false,
+            "ecom_seo_data": {
+                "page_title": "",
+                "page_description": "",
+                "permalink": ""
+            }
+        }
+    },
+    {
+        "type": "CATEGORY",
+        "id": "AK2KP6VQLWJNOJVL76FFSHEB",
+        "updated_at": "2024-11-17T22:45:17.814Z",
+        "created_at": "2024-11-17T22:45:17.898Z",
+        "version": 1731883517814,
+        "is_deleted": false,
+        "present_at_all_locations": true,
+        "category_data": {
+            "name": "Package",
+            "category_type": "REGULAR_CATEGORY",
+            "parent_category": {
+                "ordinal": -2251662374731776
+            },
+            "is_top_level": true,
+            "online_visibility": false
+        }
+    }
+]
