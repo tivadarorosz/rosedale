@@ -1,4 +1,6 @@
 import os
+import psycopg2
+from datetime import datetime
 import sys
 import logging
 import traceback
@@ -53,7 +55,56 @@ register_blueprints()
 
 @app.route("/healthcheck")
 def healthcheck():
-	return "OK", 200
+	"""
+	Enhanced healthcheck endpoint that verifies:
+	1. Application is running
+	2. Database connection is working
+	3. Basic environment configuration
+	"""
+	try:
+		# Basic check
+		status = {
+			"status": "healthy",
+			"timestamp": datetime.utcnow().isoformat(),
+			"environment": os.getenv("FLASK_ENV", "production")
+		}
+		
+		# Optional: Quick DB connection check
+		try:
+			conn = psycopg2.connect(
+				host=os.getenv("DB_HOST"),
+				database=os.getenv("DB_NAME"),
+				user=os.getenv("DB_USER"),
+				password=os.getenv("DB_PASSWORD"),
+				port=os.getenv("DB_PORT"),
+				connect_timeout=3  # Short timeout for healthcheck
+			)
+			conn.close()
+			status["database"] = "connected"
+		except Exception as e:
+			status["database"] = "error"
+			status["status"] = "degraded"
+		
+		# Check essential environment variables
+		required_vars = [
+			"SENTRY_DSN",
+			"CAMPFIRE_TECH_URL",
+			"CAMPFIRE_ALERT_URL"
+		]
+		
+		missing_vars = [var for var in required_vars if not os.getenv(var)]
+		if missing_vars:
+			status["status"] = "degraded"
+			status["missing_config"] = missing_vars
+		
+		return jsonify(status), 200 if status["status"] == "healthy" else 503
+		
+	except Exception as e:
+		return jsonify({
+			"status": "unhealthy",
+			"timestamp": datetime.utcnow().isoformat(),
+			"error": str(e)
+		}), 503
 
 def print_registered_routes():
 	print("\nRegistered Routes:")
