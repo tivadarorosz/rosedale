@@ -46,37 +46,66 @@ CREATE INDEX idx_customers_email ON customers (email);
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     confirmation_code VARCHAR(50) NOT NULL UNIQUE,
-    customer_id INT NOT NULL,
-    status VARCHAR(50) NOT NULL CHECK (status IN ('approved', 'pending_approval', 'cancelled', 'no_show', 'completed')),
-    fulfillment_status VARCHAR(50),
-    payment_status VARCHAR(50) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
-    total DECIMAL(10, 2) NOT NULL,
+    customer_id INT NOT NULL REFERENCES customers(id),
+    source VARCHAR(20) NOT NULL CHECK (source IN ('square', 'latepoint', 'admin', 'acuity')),
+    latepoint_order_id INT UNIQUE,
+    square_order_id VARCHAR(50) UNIQUE,
+    status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'cancelled', 'completed')),
+    fulfillment_status VARCHAR(50) DEFAULT 'not_fulfilled' CHECK (fulfillment_status IN ('fulfilled', 'not_fulfilled', 'partially_fulfilled')),
+    payment_status VARCHAR(50) NOT NULL CHECK (payment_status IN ('not_paid', 'partially_paid', 'fully_paid', 'processing')),
+    subtotal DECIMAL(10,2) NOT NULL CHECK (subtotal >= 0),
+    total DECIMAL(10,2) NOT NULL CHECK (total >= 0),
+    notes TEXT,
     customer_comment TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
+    CONSTRAINT external_id_required CHECK (
+        latepoint_order_id IS NOT NULL OR square_order_id IS NOT NULL
+    )
 );
 
-CREATE INDEX idx_orders_customer_id ON orders (customer_id);
+CREATE INDEX idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX idx_orders_source ON orders(source);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 
--- Create order_line_items table
+
+-- Create order line table
 CREATE TABLE order_line_items (
-    id SERIAL PRIMARY KEY,
-    order_id INT NOT NULL,
-    item_id INT NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    price INT NOT NULL,
-    total INT NOT NULL,
-    add_ons JSON,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(id),
-    FOREIGN KEY (item_id) REFERENCES items(id)
+   id SERIAL PRIMARY KEY,
+   order_id INT NOT NULL REFERENCES orders(id),
+   item_id INT NOT NULL REFERENCES items(id),
+   quantity INT NOT NULL DEFAULT 1,
+   price INT NOT NULL,
+   total INT NOT NULL,
+   add_ons JSON,
+   external_id VARCHAR(50) UNIQUE,
+   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   CONSTRAINT check_quantity_positive CHECK (quantity > 0),
+   CONSTRAINT check_price_positive CHECK (price >= 0),
+   CONSTRAINT check_total_positive CHECK (total >= 0),
+   CONSTRAINT check_total_calculation CHECK (total = price * quantity)
 );
 
-CREATE INDEX idx_order_line_items_order_id ON order_line_items (order_id);
-CREATE INDEX idx_order_line_items_item_id ON order_line_items (item_id);
+CREATE INDEX idx_order_line_items_order_id ON order_line_items(order_id);
+CREATE INDEX idx_order_line_items_item_id ON order_line_items(item_id);
+
+-- Trigger to ensure order has at least one line item
+CREATE OR REPLACE FUNCTION check_order_has_items()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM order_line_items WHERE order_id = NEW.id) THEN
+        RAISE EXCEPTION 'Order must have at least one item';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ensure_order_has_items
+AFTER INSERT ON orders
+FOR EACH ROW
+EXECUTE FUNCTION check_order_has_items();
 
 -- Create items table
 CREATE TABLE items (

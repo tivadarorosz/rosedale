@@ -28,20 +28,30 @@ Table customers {
 }
 
 Table orders {
-    id serial [primary key]
-    confirmation_code varchar(50) [not null, unique]
-    customer_id int [ref: > customers.id, not null]
-    latepoint_order_id int [note: "LatePoint order ID, optional"]
-    square_order_id varchar(50) [note: "Square order ID, optional"]
-    status varchar(50) [not null, note: "Allowed values: 'open', 'cancelled', 'completed'"]
-    fulfillment_status varchar(50) [note: "e.g., 'fulfilled', 'not_fulfilled'"]
-    payment_status varchar(50) [not null, note: "e.g., 'fully_paid', 'partially_paid'"]
-    subtotal decimal(10, 2) [not null, note: "Subtotal before discounts, in cents"]
-    total decimal(10, 2) [not null, note: "Total after discounts and taxes, in cents"]
-    customer_comment text [note: "Optional comments from the customer"]
-    created_at timestamp [not null, default: "CURRENT_TIMESTAMP", note: "Record creation timestamp"]
-    updated_at timestamp [not null, default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", note: "Record last updated timestamp"]
-    note: "Constraint: At least one of latepoint_order_id or square_order_id must not be NULL"
+ id serial [pk]
+ confirmation_code varchar(50) [unique]
+ customer_id int [ref: > customers.id, not null]
+ source varchar(20) [not null, note: "Allowed: 'square', 'latepoint', 'admin', 'acuity'"]
+ latepoint_order_id int [unique]
+ square_order_id varchar(50) [unique]
+ status varchar(50) [not null, default: 'open', note: "Allowed: 'open', 'cancelled', 'completed'"]
+ fulfillment_status varchar(50) [default: 'not_fulfilled', note: "Allowed: 'fulfilled', 'not_fulfilled', 'partially_fulfilled'"]
+ payment_status varchar(50) [not null, note: "Allowed: 'not_paid', 'partially_paid', 'fully_paid', 'processing'"]
+ subtotal decimal(10,2) [not null, note: "Must be >= 0"]
+ total decimal(10,2) [not null, note: "Must be >= 0"]
+ notes text
+ customer_comment text
+ created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+ updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+ indexes {
+   customer_id
+   source
+   status
+   payment_status
+ }
+
+ note: 'Either latepoint_order_id or square_order_id must not be null'
 }
 
 Table order_line_items {
