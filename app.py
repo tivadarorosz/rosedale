@@ -118,7 +118,8 @@ def healthcheck():
         required_vars = [
             "SENTRY_DSN",
             "CAMPFIRE_TECH_URL",
-            "CAMPFIRE_ALERT_URL"
+            "CAMPFIRE_ALERT_URL",
+            "CAMPFIRE_WEBHOOK_TOKEN"
         ]
 
         missing_vars = [var for var in required_vars if not os.getenv(var)]

@@ -113,7 +113,7 @@ def generate_code(command, params):
         return {"error": "Failed to connect to code generator service"}
 
 
-@campfire_webhook.route('/<token>/', methods=['POST'])
+@campfire_webhook.route('/<token>', methods=['POST'])  # Remove trailing slash
 @limiter.limit("20 per minute")
 def handle_webhook(token):
     try:
