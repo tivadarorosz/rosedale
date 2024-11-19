@@ -11,6 +11,18 @@ import os
 logger = logging.getLogger(__name__)
 campfire_webhook = Blueprint('campfire_webhook', __name__)
 
+# Code type descriptions
+CODE_DESCRIPTIONS = {
+    "unlimited": "Unlimited Package Access",
+    "school": "School Group Discount",
+    "referral": "Friend & Family Referral Discount",
+    "guest": "Free Session Guest Pass",
+    "gift_digital": "Digital Gift Card",
+    "gift_premium": "Premium Gift Card",
+    "personal_duration": "Personal Duration Package",
+    "personal_discount": "Personal Discount Code"
+}
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
@@ -24,46 +36,87 @@ def get_base_url():
 
 def get_help_message():
     return """
+    <style>li {margin-bottom: 20px;}</style>
     <p>📋 <strong>Available Commands:</strong></p>
     <ol>
-        <li>1️⃣ <strong>Generate unlimited package codes.</strong><br>
-            <strong>Usage:</strong> duration=[60/90/110] first_name=[NAME]<br>
-            <strong>Example:</strong> unlimited duration=60 first_name=John
+        <li><strong>Unlimited Package Codes</strong><br>
+            <strong>Usage:</strong> unlimited duration=[60/90/110] first_name=[NAME]<br>
+            <strong>Example:</strong> unlimited duration=90 first_name=Rebecca<br>
+            <em>Generates:</em> UL-90-REBECCA-ABCD12
         </li>
-        <li>2️⃣ <strong>Generate school group discount codes.</strong><br>
-            <strong>Usage:</strong> discount=[20/50]<br>
-            <strong>Example:</strong> school discount=20
+        <li><strong>School Group Discount Codes</strong><br>
+            <strong>Usage:</strong> school discount=[1-100]<br>
+            <strong>Example:</strong> school discount=20<br>
+            <em>Generates:</em> SCHL-20-ABCD12
         </li>
-        <li>3️⃣ <strong>Generate referral discount codes.</strong><br>
-            <strong>Usage:</strong> first_name=[NAME] discount=[20/50]<br>
-            <strong>Example:</strong> referral first_name=Jane discount=50
+        <li><strong>Referral Discount Codes</strong><br>
+            <strong>Usage:</strong> referral first_name=[NAME] discount=[20/50]<br>
+            <strong>Example:</strong> referral first_name=Jane discount=50<br>
+            <em>Generates:</em> REF-50-JANE-ABCD12
         </li>
-        <li>4️⃣ <strong>Generate free guest passes.</strong><br>
-            <strong>Usage:</strong> duration=[60/90/110] first_name=[NAME]<br>
-            <strong>Example:</strong> guest duration=90 first_name=Bob
+        <li><strong>Free Guest Pass Codes</strong><br>
+            <strong>Usage:</strong> guest duration=[60/90/110] first_name=[NAME]<br>
+            <strong>Example:</strong> guest duration=60 first_name=Bob<br>
+            <em>Generates:</em> FREE-60-BOB-ABCD12
         </li>
-        <li>5️⃣ <strong>Generate gift card codes.</strong><br>
-            <strong>Usage:</strong> amount=[VALUE] type=[DIGITAL/PREMIUM] first_name=[NAME]<br>
-            <strong>Example:</strong> gift amount=100 type=DIGITAL first_name=Alice
+        <li><strong>Gift Card Codes</strong><br>
+            <strong>Usage:</strong> gift amount=[VALUE] type=[DIGITAL/PREMIUM] first_name=[NAME]<br>
+            <strong>Examples:</strong><br>
+            With name: gift amount=100 type=DIGITAL first_name=Alice<br>
+            <em>Generates:</em> GIFT-DGTL-100-ALICE-K7M2P9X4<br>
+            Without name: gift amount=150 type=PREMIUM<br>
+            <em>Generates:</em> GIFT-PREM-150-B7K2N8L4
         </li>
-        <li>6️⃣ <strong>Generate multiple premium gift cards.</strong><br>
-            <strong>Usage:</strong> amount=[VALUE] quantity=[1-50]<br>
-            <strong>Example:</strong> bulk amount=50 quantity=5
+        <li><strong>Bulk Premium Gift Cards</strong><br>
+            <strong>Usage:</strong> bulk amount=[VALUE] quantity=[1-50]<br>
+            <strong>Example:</strong> bulk amount=50 quantity=2<br>
+            <em>Generates multiple codes like:</em><br>
+            GIFT-PREM-50-B7K2N8L4<br>
+            GIFT-PREM-50-X9Y4M7P2
         </li>
-        <li>7️⃣ <strong>Generate personal massage codes.</strong><br>
-            <strong>Usage:</strong> duration=[60/90/110] first_name=[NAME]<br>
-            <strong>Example:</strong> personal duration=110 first_name=Carol
+        <li><strong>Personal Massage Codes</strong><br>
+            <strong>Usage:</strong><br>
+            Duration-based: personal duration=[60/90/110] first_name=[NAME]<br>
+            Discount-based: personal discount=[20/50] first_name=[NAME]<br>
+            <strong>Examples:</strong><br>
+            Duration: personal duration=90 first_name=Carol<br>
+            <em>Generates:</em> PERS-90-CAROL-ABCD12<br>
+            Discount: personal discount=20 first_name=Emily<br>
+            <em>Generates:</em> PERS-20-EMILY-ABCD12
         </li>
-        <li>8️⃣ <strong>Daily Report</strong><br>
-            <strong>Usage:</strong> Get sales and other statistics.<br>
+        <li><strong>Daily Report</strong><br>
+            <strong>Usage:</strong> Get sales and other statistics<br>
             <strong>Example:</strong> report
         </li>
-        <li>9️⃣ <strong>Help</strong><br>
-            <strong>Usage:</strong> Show this message.<br>
+        <li><strong>Help</strong><br>
+            <strong>Usage:</strong> Show this help message<br>
             <strong>Example:</strong> help
         </li>
     </ol>
+    <p><em>Note: All codes are automatically converted to uppercase. Gift cards use 8-character unique endings, all others use 6 characters.</em></p>
     """
+
+def get_code_type(code):
+    """Determine code type from the generated code"""
+    if code.startswith("UL-"):
+        return "unlimited"
+    elif code.startswith("SCHL-"):
+        return "school"
+    elif code.startswith("REF-"):
+        return "referral"
+    elif code.startswith("FREE-"):
+        return "guest"
+    elif code.startswith("GIFT-DGTL-"):
+        return "gift_digital"
+    elif code.startswith("GIFT-PREM-"):
+        return "gift_premium"
+    elif code.startswith("PERS-"):
+        # Check if it's duration or discount based
+        parts = code.split("-")
+        if len(parts) > 1 and parts[1] in ["60", "90", "110"]:
+            return "personal_duration"
+        return "personal_discount"
+    return "unknown"
 
 def parse_code_request(content):
     parts = content.split()
@@ -118,7 +171,6 @@ def handle_webhook(token):
 
         data = request.json
         room_id = data.get("room", {}).get("id")
-        user_name = data.get("user", {}).get("name")
         content = data.get("message", {}).get("body", {}).get("plain", "").strip()
 
         if not room_id:
@@ -126,32 +178,42 @@ def handle_webhook(token):
             return jsonify({"error": "Missing room ID"}), 400
 
         if not content:
-            return jsonify({"status": "no content"}), 200
+            return '', 204
 
         if content.lower() == "help":
-            send_room_message(room_id, get_help_message(), user_name)
-            return jsonify({"status": "success"}), 200
+            send_room_message(room_id, get_help_message())
+            return '', 204
 
         command, params = parse_code_request(content)
 
         if command == "report":
             report_message = "Report functionality coming soon"
-            send_room_message(room_id, report_message, user_name)
-            return jsonify({"status": "success"}), 200
+            send_room_message(room_id, report_message)
+            return '', 204
 
         result = generate_code(command, params)
         if result:
             if "error" in result:
-                send_room_message(room_id, f"❌ {result['error']}", user_name)
+                send_room_message(room_id, f"❌ {result['error']}")
             else:
-                message = f"Generated code: {result.get('code', '')}"
-                if 'codes' in result:
-                    message = "Generated codes:\n" + "\n".join(result['codes'])
-                send_room_message(room_id, f"✅ {message}", user_name)
-        else:
-            send_room_message(room_id, "❌ Invalid command. Type 'help' to see available commands.", user_name)
+                if 'codes' in result:  # Bulk codes
+                    codes_list = "\n".join(result['codes'])
+                    message = f"""✅ Generated codes:
+{codes_list}
 
-        return jsonify({"status": "success"}), 200
+Description: {CODE_DESCRIPTIONS['gift_premium']}"""
+                else:  # Single code
+                    code = result.get('code', '')
+                    code_type = get_code_type(code)
+                    message = f"""✅ Generated code:
+{code}
+
+Description: {CODE_DESCRIPTIONS[code_type]}"""
+                send_room_message(room_id, message)
+        else:
+            send_room_message(room_id, "❌ Invalid command. Type 'help' to see available commands.")
+
+        return '', 204
 
     except Exception as e:
         logger.error(f"Webhook error: {str(e)}")

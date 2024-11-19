@@ -34,8 +34,19 @@ def validate_duration(duration):
     return duration in ['60', '90', '110']
 
 
-def validate_discount(discount):
-    return discount in ['20', '50']
+def validate_discount(discount, is_school=False):
+    """Validate discount percentage
+    Args:
+        discount: The discount value to validate
+        is_school: If True, accepts 1-100, if False only accepts 20 or 50
+    """
+    try:
+        discount_value = int(discount)
+        if is_school:
+            return 1 <= discount_value <= 100
+        return discount in ['20', '50']
+    except (ValueError, TypeError):
+        return False
 
 
 @code_generator.before_request
@@ -68,7 +79,7 @@ def generate_unlimited_code():
             return jsonify({"error": "Missing first_name parameter"}), 400
 
         prefix = f"UL-{duration}-{first_name.upper()}"
-        code = generate_code(prefix, 4)
+        code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated unlimited code for {first_name}")
         return jsonify({"code": code})
     except Exception as e:
@@ -85,12 +96,12 @@ def generate_school_code():
         logger.info("Generating school code")
         discount = request.args.get('discount')
 
-        if not discount or not validate_discount(discount):
+        if not discount or not validate_discount(discount, is_school=True):
             logger.warning("Invalid discount parameter")
-            return jsonify({"error": "Invalid discount. Must be 20 or 50"}), 400
+            return jsonify({"error": "Invalid discount. Must be between 1 and 100"}), 400
 
         prefix = f"SCHL-{discount}"
-        code = generate_code(prefix, 4)
+        code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated school code with discount {discount}")
         return jsonify({"code": code})
     except Exception as e:
@@ -116,7 +127,7 @@ def generate_referral_code():
             return jsonify({"error": "Invalid discount. Must be 20 or 50"}), 400
 
         prefix = f"REF-{discount}-{first_name.upper()}"
-        code = generate_code(prefix, 4)
+        code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated referral code for {first_name}")
         return jsonify({"code": code})
     except Exception as e:
@@ -142,7 +153,7 @@ def generate_guest_pass_code():
             return jsonify({"error": "Invalid duration. Must be 60, 90, or 110"}), 400
 
         prefix = f"FREE-{duration}-{first_name.upper()}"
-        code = generate_code(prefix, 4)
+        code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated guest pass code for {first_name}")
         return jsonify({"code": code})
     except Exception as e:
@@ -233,7 +244,7 @@ def generate_personal_code():
             logger.warning("Invalid or missing duration/discount parameter")
             return jsonify({"error": "Must provide either valid duration (60, 90, 110) or discount percentage"}), 400
 
-        code = generate_code(prefix, 4)
+        code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated personal code for {first_name}")
         return jsonify({"code": code})
     except Exception as e:

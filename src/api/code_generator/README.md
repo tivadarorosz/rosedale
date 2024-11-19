@@ -25,7 +25,7 @@ Generate unlimited package codes.
 **Example:**  
 ```
 GET /api/v1/code-generator/generate/unlimited?duration=90&first_name=Rebecca
-Response: {"code": "UL-90-REBECCA-4KM2"}
+Response: {"code": "UL-90-REBECCA-ABCD12"}
 ```
 
 ### 2. School Discount Codes
@@ -34,12 +34,12 @@ Generate school group discount codes.
 **Endpoint:** `/api/v1/code-generator/generate/school-code`  
 **Method:** GET  
 **Parameters:**
-- `discount`: (Required) Percentage: 20, 50
+- `discount`: (Required) Percentage: 1-100
 
 **Example:**  
 ```
 GET /api/v1/code-generator/generate/school-code?discount=20
-Response: {"code": "SCHL-20-RIP5"}
+Response: {"code": "SCHL-20-ABCD12"}
 ```
 
 ### 3. Referral Discount Codes
@@ -49,12 +49,12 @@ Generate referral discount codes.
 **Method:** GET  
 **Parameters:**
 - `first_name`: (Required) Referring customer's name
-- `discount`: (Required) Percentage: 20, 50
+- `discount`: (Required) Percentage: 20 or 50
 
 **Example:**  
 ```
 GET /api/v1/code-generator/generate/referral-code?first_name=Rebecca&discount=50
-Response: {"code": "REF-50-REBECCA-75X2"}
+Response: {"code": "REF-50-REBECCA-ABCD12"}
 ```
 
 ### 4. Free Guest Pass Codes
@@ -69,7 +69,7 @@ Generate free guest passes.
 **Example:**  
 ```
 GET /api/v1/code-generator/generate/guest-pass?duration=60&first_name=Rebecca
-Response: {"code": "FREE-60-REBECCA-4A12"}
+Response: {"code": "FREE-60-REBECCA-ABCD12"}
 ```
 
 ### 5. Gift Card Codes
@@ -121,13 +121,30 @@ Generate personal massage codes.
 - Either:
   - `duration`: Minutes: 60, 90, 110
   - OR
-  - `discount`: Percentage
+  - `discount`: Percentage: 20 or 50
 
 **Examples:**  
 ```
 GET /api/v1/code-generator/generate/personal-code?duration=90&first_name=Rebecca
-Response: {"code": "PERS-90-REBECCA-75XQ"}
+Response: {"code": "PERS-90-REBECCA-ABCD12"}
 
 GET /api/v1/code-generator/generate/personal-code?discount=20&first_name=Emily
-Response: {"code": "PERS-20-EMILY-9XYZ"}
+Response: {"code": "PERS-20-EMILY-ABCD12"}
 ```
+
+## Code Format Details
+
+Each code type follows a specific format with unique identifiers:
+
+1. **Unlimited Package**: `UL-[DURATION]-[NAME]-[6 chars]`
+2. **School Discount**: `SCHL-[DISCOUNT]-[6 chars]`
+3. **Referral Discount**: `REF-[DISCOUNT]-[NAME]-[6 chars]`
+4. **Guest Pass**: `FREE-[DURATION]-[NAME]-[6 chars]`
+5. **Gift Card**: `GIFT-[TYPE]-[AMOUNT]-[NAME]-[8 chars]` or `GIFT-[TYPE]-[AMOUNT]-[8 chars]`
+6. **Personal Code**: `PERS-[DURATION/DISCOUNT]-[NAME]-[6 chars]`
+
+Notes:
+- All codes use uppercase letters and numbers
+- Gift cards use 8-character unique suffixes, all others use 6 characters
+- Names are automatically converted to uppercase
+- [TYPE] is either DGTL or PREM for gift cards
