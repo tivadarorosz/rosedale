@@ -13,6 +13,7 @@ CAMPFIRE_URLS = {
 	"finance": os.getenv("CAMPFIRE_FINANCE_URL"),
 	"tech": os.getenv("CAMPFIRE_TECH_URL"),
 	"alert": os.getenv("CAMPFIRE_ALERT_URL"),
+	"bot": os.getenv("CAMPFIRE_BOT_URL"),
 }
 
 def send_message(channel, message):
