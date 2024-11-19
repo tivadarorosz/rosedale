@@ -1,7 +1,6 @@
 import os
 import psycopg2
 from datetime import datetime
-import sys
 import logging
 import traceback
 from flask import Flask, jsonify
@@ -18,13 +17,34 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+
 # Environment configuration
-if os.getenv("FLASK_DEBUG") == "1":
+ENVIRONMENT = os.getenv("FLASK_ENV", "production")
+DEBUG_MODE = os.getenv("FLASK_DEBUG") == "1"
+
+# Initialize Sentry regardless of environment
+initialize_sentry()
+
+# Configure app based on environment
+if DEBUG_MODE:
     app.debug = True
     logger.info("Flask Debug is enabled.")
-else:
-    load_dotenv()
-    initialize_sentry()  # Initialise Sentry in production
+
+logger.info(f"Running in {ENVIRONMENT} environment")
+
+# Configure SSL for development environment
+ssl_context = None
+if ENVIRONMENT == "development":
+    cert_path = "cert.pem"
+    key_path = "key.pem"
+
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        ssl_context = (cert_path, key_path)
+        logger.info("SSL certificates found and will be used.")
+    else:
+        logger.warning("SSL certificates not found. Running without SSL.")
 
 
 def register_blueprints():
@@ -47,6 +67,9 @@ def register_blueprints():
         from src.api.code_generator.routes import code_generator
         app.register_blueprint(code_generator, url_prefix='/api/v1/code-generator')
 
+        from src.api.webhooks.campfire.routes import campfire_webhook
+        app.register_blueprint(campfire_webhook, url_prefix='/webhooks/campfire')
+
         logger.debug("Completed blueprint registration")
     except Exception as e:
         logger.error(f"Error registering blueprints: {str(e)}")
@@ -55,7 +78,7 @@ def register_blueprints():
         raise
 
 
-# Register blueprints after app creation
+# Register blueprints
 register_blueprints()
 
 
@@ -68,14 +91,14 @@ def healthcheck():
     3. Basic environment configuration
     """
     try:
-        # Basic check
         status = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
-            "environment": os.getenv("FLASK_ENV", "production")
+            "environment": ENVIRONMENT,
+            "debug_mode": DEBUG_MODE
         }
 
-        # Optional: Quick DB connection check
+        # Database connection check
         try:
             conn = psycopg2.connect(
                 host=os.getenv("DB_HOST"),
@@ -83,7 +106,7 @@ def healthcheck():
                 user=os.getenv("DB_USER"),
                 password=os.getenv("DB_PASSWORD"),
                 port=os.getenv("DB_PORT"),
-                connect_timeout=3  # Short timeout for healthcheck
+                connect_timeout=3
             )
             conn.close()
             status["database"] = "connected"
@@ -119,7 +142,7 @@ def print_registered_routes():
         print(f"{rule.endpoint}: {rule.rule} [{', '.join(rule.methods)}]")
 
 
-# Call it right after all blueprints are registered
+# Print registered routes
 print_registered_routes()
 
 
@@ -140,8 +163,7 @@ def handle_exception(e):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
-    if os.getenv("FLASK_DEBUG") == "1":
-        print("Flask Debug is enabled.")
-        app.run(host='0.0.0.0', port=port)
+    if ENVIRONMENT == "development" and ssl_context:
+        app.run(host='0.0.0.0', port=port, ssl_context=ssl_context, debug=DEBUG_MODE)
     else:
-        app.run(host='0.0.0.0', port=port)
+        app.run(host='0.0.0.0', port=port, debug=DEBUG_MODE)
