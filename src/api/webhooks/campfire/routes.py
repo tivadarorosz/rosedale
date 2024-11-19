@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from src.utils.error_monitoring import handle_error
-from src.utils.campfire_utils import send_message
+from src.utils.campfire_utils import send_room_message
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
@@ -17,12 +17,10 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-
 def get_base_url():
     if os.getenv("FLASK_ENV") == "development":
         return "http://localhost:8080/api/v1/code-generator/generate"
     return "https://app.rosedalemassage.co.uk/api/v1/code-generator/generate"
-
 
 def get_help_message():
     return """
@@ -67,7 +65,6 @@ def get_help_message():
     </ol>
     """
 
-
 def parse_code_request(content):
     parts = content.split()
     command = parts[0].lower() if parts else ""
@@ -79,7 +76,6 @@ def parse_code_request(content):
             params[key.lower()] = value
 
     return command, params
-
 
 def generate_code(command, params):
     base_url = get_base_url()
@@ -112,8 +108,7 @@ def generate_code(command, params):
         logger.error(f"Request failed: {str(e)}")
         return {"error": "Failed to connect to code generator service"}
 
-
-@campfire_webhook.route('/<token>', methods=['POST'])  # Remove trailing slash
+@campfire_webhook.route('/<token>', methods=['POST'], strict_slashes=False)
 @limiter.limit("20 per minute")
 def handle_webhook(token):
     try:
@@ -122,33 +117,39 @@ def handle_webhook(token):
             return jsonify({"error": "Unauthorized"}), 401
 
         data = request.json
-        content = data.get("content", "").strip()
+        room_id = data.get("room", {}).get("id")
+        user_name = data.get("user", {}).get("name")
+        content = data.get("message", {}).get("body", {}).get("plain", "").strip()
+
+        if not room_id:
+            logger.error("No room ID in webhook payload")
+            return jsonify({"error": "Missing room ID"}), 400
 
         if not content:
             return jsonify({"status": "no content"}), 200
 
         if content.lower() == "help":
-            send_message("bot", get_help_message())
+            send_room_message(room_id, get_help_message(), user_name)
             return jsonify({"status": "success"}), 200
 
         command, params = parse_code_request(content)
 
         if command == "report":
             report_message = "Report functionality coming soon"
-            send_message("bot", report_message)
+            send_room_message(room_id, report_message, user_name)
             return jsonify({"status": "success"}), 200
 
         result = generate_code(command, params)
         if result:
             if "error" in result:
-                send_message("bot", f"❌ {result['error']}")
+                send_room_message(room_id, f"❌ {result['error']}", user_name)
             else:
                 message = f"Generated code: {result.get('code', '')}"
                 if 'codes' in result:
                     message = "Generated codes:\n" + "\n".join(result['codes'])
-                send_message("bot", f"✅ {message}")
+                send_room_message(room_id, f"✅ {message}", user_name)
         else:
-            send_message("bot", "❌ Invalid command. Type 'help' to see available commands.")
+            send_room_message(room_id, "❌ Invalid command. Type 'help' to see available commands.", user_name)
 
         return jsonify({"status": "success"}), 200
 
