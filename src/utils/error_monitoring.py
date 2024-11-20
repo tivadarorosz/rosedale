@@ -8,13 +8,18 @@ from src.utils.campfire_utils import send_message
 logger = logging.getLogger(__name__)
 
 def initialize_sentry():
-	"""Initialize Sentry SDK"""
-	sentry_sdk.init(
-		dsn=os.getenv("SENTRY_DSN"),
-		integrations=[FlaskIntegration()],
-		traces_sample_rate=1.0,
-		environment=os.getenv("FLASK_ENV", "production")
-	)
+    """Initialize Sentry for error monitoring."""
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=1.0,  # Adjust as needed
+        environment=os.getenv("FLASK_ENV", "production"),
+        debug=False  # Disable Sentry-specific debug mode
+    )
+
+    # Suppress DEBUG logs from Sentry
+    sentry_logger = logging.getLogger("sentry_sdk")
+    sentry_logger.setLevel(logging.WARNING)
 
 def format_error_message(error, extra_info=None):
 	"""Format error message for Campfire"""
