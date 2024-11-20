@@ -11,18 +11,6 @@ import os
 logger = logging.getLogger(__name__)
 campfire_webhook = Blueprint('campfire_webhook', __name__)
 
-# Code type descriptions
-CODE_DESCRIPTIONS = {
-    "unlimited": "Unlimited Package Access",
-    "school": "School Group Discount",
-    "referral": "Friend & Family Referral Discount",
-    "guest": "Free Session Guest Pass",
-    "gift_digital": "Digital Gift Card",
-    "gift_premium": "Premium Gift Card",
-    "personal_duration": "Personal Duration Package",
-    "personal_discount": "Personal Discount Code"
-}
-
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
@@ -33,7 +21,6 @@ def get_base_url():
     if os.getenv("FLASK_ENV") == "development":
         return "http://localhost:8080/api/v1/code-generator/generate"
     return "https://app.rosedalemassage.co.uk/api/v1/code-generator/generate"
-
 
 def get_help_message():
     return """
@@ -148,7 +135,6 @@ def get_code_type(code):
     elif code.startswith("GIFT-PREM-"):
         return "gift_premium"
     elif code.startswith("PERS-"):
-        # Check if it's duration or discount based
         parts = code.split("-")
         if len(parts) > 1 and parts[1] in ["60", "90", "110"]:
             return "personal_duration"
@@ -192,8 +178,9 @@ def generate_code(command, params):
         if response.ok:
             return response.json()
         else:
-            logger.error(f"API request failed: {response.status_code} - {response.text}")
-            return {"error": f"Failed to generate code: {response.text}"}
+            error_message = response.json().get("error", "Failed to generate code")
+            logger.warning(f"API request failed: {response.status_code} - {error_message}")
+            return {"error": error_message}
     except requests.RequestException as e:
         logger.error(f"Request failed: {str(e)}")
         return {"error": "Failed to connect to code generator service"}
@@ -201,12 +188,13 @@ def generate_code(command, params):
 @campfire_webhook.route('/<token>', methods=['POST'], strict_slashes=False)
 @limiter.limit("20 per minute")
 def handle_webhook(token):
+    data = request.json
+    room_id = data.get("room", {}).get("id")
     try:
         if token != os.getenv("CAMPFIRE_WEBHOOK_TOKEN"):
             logger.warning("Invalid webhook token")
             return jsonify({"error": "Unauthorized"}), 401
 
-        data = request.json
         room_id = data.get("room", {}).get("id")
         content = data.get("message", {}).get("body", {}).get("plain", "").strip()
 
@@ -233,19 +221,19 @@ def handle_webhook(token):
             if "error" in result:
                 send_room_message(room_id, f"❌ {result['error']}")
             else:
-                if 'codes' in result:  # Bulk codes
-                    codes_list = "\n".join(result['codes'])
+                if "codes" in result:  # Bulk codes
+                    codes_list = "\n".join(result["codes"])
                     message = f"""✅ Generated codes:
 {codes_list}
 
-Description: {CODE_DESCRIPTIONS['gift_premium']}"""
+Description: {result.get('description', 'Premium Gift Card')}"""
                 else:  # Single code
-                    code = result.get('code', '')
-                    code_type = get_code_type(code)
+                    code = result.get("code", "")
+                    description = result.get("description", "")
                     message = f"""✅ Generated code:
 {code}
 
-Description: {CODE_DESCRIPTIONS[code_type]}"""
+Description: {description}"""
                 send_room_message(room_id, message)
         else:
             send_room_message(room_id, "❌ Invalid command. Type 'help' to see available commands.")
@@ -256,4 +244,5 @@ Description: {CODE_DESCRIPTIONS[code_type]}"""
         logger.error(f"Webhook error: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Campfire webhook error")
-        return jsonify({"error": str(e)}), 500
+        send_room_message(room_id, "Oops! Something went wrong. Please try again later.")
+        return '', 500

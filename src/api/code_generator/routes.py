@@ -21,7 +21,6 @@ limiter = Limiter(
 
 API_KEY = os.getenv("ROSEDALE_API_KEY")
 
-
 def generate_code(prefix, suffix_length=8):
     try:
         return f"{prefix}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=suffix_length))}"
@@ -30,17 +29,49 @@ def generate_code(prefix, suffix_length=8):
         handle_error(e, "Error generating code")
         raise
 
+def generate_description(code_type, result):
+    if code_type == "unlimited":
+        duration = result.get("duration")
+        first_name = result.get("first_name")
+        last_name = result.get("last_name")
+        expiration = result.get("expiration")
+        if expiration:
+            return f"Unlimited-{duration}-{first_name} {last_name}-{expiration}"
+        else:
+            return f"Unlimited-{duration}-{first_name} {last_name}"
+    elif code_type == "school":
+        discount = result.get("discount")
+        return f"School Group Discount - {discount}% off"
+    elif code_type == "referral":
+        first_name = result.get("first_name")
+        discount = result.get("discount")
+        return f"Friend & Family Referral - {first_name} gets {discount}% off"
+    elif code_type == "guest":
+        duration = result.get("duration")
+        first_name = result.get("first_name")
+        return f"Free Session Guest Pass - {duration} minutes for {first_name}"
+    elif code_type == "gift_digital":
+        amount = result.get("amount")
+        first_name = result.get("first_name")
+        return f"Digital Gift Card - {first_name} gets ${amount}"
+    elif code_type == "gift_premium":
+        amount = result.get("amount")
+        return f"Premium Gift Card - ${amount}"
+    elif code_type == "personal_duration":
+        duration = result.get("duration")
+        first_name = result.get("first_name")
+        return f"Personal Duration Package - {duration} minutes for {first_name}"
+    elif code_type == "personal_discount":
+        discount = result.get("discount")
+        first_name = result.get("first_name")
+        return f"Personal Discount Code - {first_name} gets {discount}% off"
+    else:
+        return "Unknown Code Type"
 
 def validate_duration(duration):
     return duration in ['60', '90', '110']
 
-
 def validate_discount(discount, discount_type="fixed"):
-    """Validate discount percentage based on type
-    Args:
-        discount: The discount value to validate
-        discount_type: One of "fixed" (20/50), "variable" (1-100), "school" (1-100)
-    """
     try:
         discount_value = int(discount)
         if discount_type in ["variable", "school"]:
@@ -48,7 +79,6 @@ def validate_discount(discount, discount_type="fixed"):
         return discount in ['20', '50']  # fixed type
     except (ValueError, TypeError):
         return False
-
 
 @code_generator.before_request
 def authorize_request():
@@ -62,7 +92,6 @@ def authorize_request():
         logger.error(f"Authorization error: {str(e)}")
         handle_error(e, "Authorization error")
         return jsonify({"error": "Authorization error"}), 500
-
 
 @code_generator.route('/generate/unlimited', methods=['GET'])
 @limiter.limit("10 per minute")
@@ -87,30 +116,28 @@ def generate_unlimited_code():
         prefix = f"UL-{duration}-{first_name.upper()}"
         code = generate_code(prefix, suffix_length=6)
 
-        # Create name format
+        formatted_date = None
         if expiration:
             try:
-                # Parse and format date (assuming incoming format is YYYY-MM-DD)
                 expiration_date = datetime.strptime(expiration, "%Y-%m-%d")
                 formatted_date = expiration_date.strftime("%d %b %Y")
-                name = f"Unlimited-{duration}-{first_name} {last_name}-{formatted_date}"
             except ValueError:
                 logger.warning("Invalid expiration date format")
                 return jsonify({"error": "Invalid expiration date format. Use YYYY-MM-DD"}), 400
-        else:
-            name = f"Unlimited-{duration}-{first_name} {last_name}"
 
         logger.info(f"Generated unlimited code for {first_name} {last_name}")
         return jsonify({
             "code": code,
-            "name": name
+            "duration": duration,
+            "first_name": first_name,
+            "last_name": last_name,
+            "expiration": formatted_date
         })
     except Exception as e:
         logger.error(f"Error generating unlimited code: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Error generating unlimited code")
         return jsonify({"error": "Internal Server Error"}), 500
-
 
 @code_generator.route('/generate/school-code', methods=['GET'])
 @limiter.limit("10 per minute")
@@ -126,13 +153,12 @@ def generate_school_code():
         prefix = f"SCHL-{discount}"
         code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated school code with discount {discount}")
-        return jsonify({"code": code})
+        return jsonify({"code": code, "discount": discount})
     except Exception as e:
         logger.error(f"Error generating school code: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Error generating school code")
         return jsonify({"error": "Internal Server Error"}), 500
-
 
 @code_generator.route('/generate/referral-code', methods=['GET'])
 @limiter.limit("10 per minute")
@@ -152,13 +178,12 @@ def generate_referral_code():
         prefix = f"REF-{discount}-{first_name.upper()}"
         code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated referral code for {first_name}")
-        return jsonify({"code": code})
+        return jsonify({"code": code, "first_name": first_name, "discount": discount})
     except Exception as e:
         logger.error(f"Error generating referral code: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Error generating referral code")
         return jsonify({"error": "Internal Server Error"}), 500
-
 
 @code_generator.route('/generate/guest-pass', methods=['GET'])
 @limiter.limit("10 per minute")
@@ -178,13 +203,12 @@ def generate_guest_pass_code():
         prefix = f"FREE-{duration}-{first_name.upper()}"
         code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated guest pass code for {first_name}")
-        return jsonify({"code": code})
+        return jsonify({"code": code, "first_name": first_name, "duration": duration})
     except Exception as e:
         logger.error(f"Error generating guest pass code: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Error generating guest pass code")
         return jsonify({"error": "Internal Server Error"}), 500
-
 
 @code_generator.route('/generate/gift-card', methods=['GET'])
 @limiter.limit("10 per minute")
@@ -209,69 +233,14 @@ def generate_gift_card_code():
 
         code = generate_code(prefix)
         logger.info(f"Generated gift card code: {code}")
-        return jsonify({"code": code})
+
+        result = {"code": code, "amount": amount}
+        if first_name:
+            result["first_name"] = first_name
+
+        return jsonify(result)
     except Exception as e:
         logger.error(f"Error generating gift card code: {str(e)}")
         logger.error(traceback.format_exc())
         handle_error(e, "Error generating gift card code")
-        return jsonify({"error": "Internal Server Error"}), 500
-
-
-@code_generator.route('/generate/gift-card/bulk', methods=['GET'])
-@limiter.limit("10 per minute")
-def generate_bulk_gift_card_codes():
-    try:
-        logger.info("Generating bulk gift card codes")
-        amount = request.args.get('amount')
-        quantity = request.args.get('quantity', type=int)
-
-        if not amount:
-            logger.warning("Missing amount parameter")
-            return jsonify({"error": "Missing amount parameter"}), 400
-        if not quantity or quantity < 1 or quantity > 50:
-            logger.warning("Invalid quantity")
-            return jsonify({"error": "Quantity must be between 1 and 50"}), 400
-
-        codes = []
-        prefix = f"GIFT-PREM-{amount}"
-        for _ in range(quantity):
-            codes.append(generate_code(prefix))
-
-        logger.info(f"Generated {quantity} bulk gift card codes")
-        return jsonify({"codes": codes})
-    except Exception as e:
-        logger.error(f"Error generating bulk gift card codes: {str(e)}")
-        logger.error(traceback.format_exc())
-        handle_error(e, "Error generating bulk gift card codes")
-        return jsonify({"error": "Internal Server Error"}), 500
-
-
-@code_generator.route('/generate/personal-code', methods=['GET'])
-@limiter.limit("10 per minute")
-def generate_personal_code():
-    try:
-        logger.info("Generating personal code")
-        duration = request.args.get('duration')
-        discount = request.args.get('discount')
-        first_name = request.args.get('first_name')
-
-        if not first_name:
-            logger.warning("Missing first_name parameter")
-            return jsonify({"error": "Missing first_name parameter"}), 400
-
-        if duration and validate_duration(duration):
-            prefix = f"PERS-{duration}-{first_name.upper()}"
-        elif discount and validate_discount(discount, "variable"):
-            prefix = f"PERS-{discount}-{first_name.upper()}"
-        else:
-            logger.warning("Invalid or missing duration/discount parameter")
-            return jsonify({"error": "Must provide either valid duration (60, 90, 110) or discount between 1 and 100"}), 400
-
-        code = generate_code(prefix, suffix_length=6)
-        logger.info(f"Generated personal code for {first_name}")
-        return jsonify({"code": code})
-    except Exception as e:
-        logger.error(f"Error generating personal code: {str(e)}")
-        logger.error(traceback.format_exc())
-        handle_error(e, "Error generating personal code")
         return jsonify({"error": "Internal Server Error"}), 500
