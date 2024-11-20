@@ -21,6 +21,15 @@ def initialize_sentry():
     sentry_logger = logging.getLogger("sentry_sdk")
     sentry_logger.setLevel(logging.WARNING)
 
+    # Suppress DEBUG logs from urllib3
+    urllib3_logger = logging.getLogger("urllib3")
+    urllib3_logger.setLevel(logging.WARNING)
+
+    # Debug: Check log levels only if FLASK_DEBUG=1
+    if os.getenv("FLASK_DEBUG") == "1":
+        print(f"sentry_sdk log level: {sentry_logger.getEffectiveLevel()}")
+        print(f"urllib3 log level: {urllib3_logger.getEffectiveLevel()}")
+
 def format_error_message(error, extra_info=None):
 	"""Format error message for Campfire"""
 	message = f"🚨 Application Error\n\n"
