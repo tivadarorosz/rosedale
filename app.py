@@ -3,7 +3,7 @@ import psycopg2
 from datetime import datetime
 import logging
 import traceback
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from src.utils.error_monitoring import initialize_sentry, handle_error
 
@@ -147,6 +147,21 @@ def print_registered_routes():
 # Print registered routes
 print_registered_routes()
 
+# 404 Error Handler
+@app.errorhandler(404)
+def not_found_error(e):
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    logger.error(
+        f"404 Error: {e.description} - URL: {request.url} - "
+        f"IP: {client_ip} - Method: {request.method} - "
+        f"User-Agent: {request.headers.get('User-Agent')}"
+    )
+
+    ignored_paths = ["/phpmyadmin", "/wp-admin"]
+    if request.path in ignored_paths:
+        return jsonify({"error": "URL not found"}), 404
+
+    return jsonify({"error": "Resource not found"}), 404
 
 @app.route("/")
 def home():
