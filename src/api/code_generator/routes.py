@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from src.utils.error_monitoring import handle_error
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from datetime import datetime
 import random
 import string
 import os
@@ -34,17 +35,17 @@ def validate_duration(duration):
     return duration in ['60', '90', '110']
 
 
-def validate_discount(discount, is_school=False):
-    """Validate discount percentage
+def validate_discount(discount, discount_type="fixed"):
+    """Validate discount percentage based on type
     Args:
         discount: The discount value to validate
-        is_school: If True, accepts 1-100, if False only accepts 20 or 50
+        discount_type: One of "fixed" (20/50), "variable" (1-100), "school" (1-100)
     """
     try:
         discount_value = int(discount)
-        if is_school:
+        if discount_type in ["variable", "school"]:
             return 1 <= discount_value <= 100
-        return discount in ['20', '50']
+        return discount in ['20', '50']  # fixed type
     except (ValueError, TypeError):
         return False
 
@@ -70,6 +71,8 @@ def generate_unlimited_code():
         logger.info("Generating unlimited package code")
         duration = request.args.get('duration')
         first_name = request.args.get('first_name')
+        last_name = request.args.get('last_name')
+        expiration = request.args.get('expiration')  # Optional parameter
 
         if not duration or not validate_duration(duration):
             logger.warning(f"Invalid duration: {duration}")
@@ -77,11 +80,31 @@ def generate_unlimited_code():
         if not first_name:
             logger.warning("Missing first_name parameter")
             return jsonify({"error": "Missing first_name parameter"}), 400
+        if not last_name:
+            logger.warning("Missing last_name parameter")
+            return jsonify({"error": "Missing last_name parameter"}), 400
 
         prefix = f"UL-{duration}-{first_name.upper()}"
         code = generate_code(prefix, suffix_length=6)
-        logger.info(f"Generated unlimited code for {first_name}")
-        return jsonify({"code": code})
+
+        # Create name format
+        if expiration:
+            try:
+                # Parse and format date (assuming incoming format is YYYY-MM-DD)
+                expiration_date = datetime.strptime(expiration, "%Y-%m-%d")
+                formatted_date = expiration_date.strftime("%d %b %Y")
+                name = f"Unlimited-{duration}-{first_name} {last_name}-{formatted_date}"
+            except ValueError:
+                logger.warning("Invalid expiration date format")
+                return jsonify({"error": "Invalid expiration date format. Use YYYY-MM-DD"}), 400
+        else:
+            name = f"Unlimited-{duration}-{first_name} {last_name}"
+
+        logger.info(f"Generated unlimited code for {first_name} {last_name}")
+        return jsonify({
+            "code": code,
+            "name": name
+        })
     except Exception as e:
         logger.error(f"Error generating unlimited code: {str(e)}")
         logger.error(traceback.format_exc())
@@ -96,7 +119,7 @@ def generate_school_code():
         logger.info("Generating school code")
         discount = request.args.get('discount')
 
-        if not discount or not validate_discount(discount, is_school=True):
+        if not discount or not validate_discount(discount, "school"):
             logger.warning("Invalid discount parameter")
             return jsonify({"error": "Invalid discount. Must be between 1 and 100"}), 400
 
@@ -122,9 +145,9 @@ def generate_referral_code():
         if not first_name:
             logger.warning("Missing first_name parameter")
             return jsonify({"error": "Missing first_name parameter"}), 400
-        if not discount or not validate_discount(discount):
+        if not discount or not validate_discount(discount, "variable"):
             logger.warning("Invalid discount parameter")
-            return jsonify({"error": "Invalid discount. Must be 20 or 50"}), 400
+            return jsonify({"error": "Invalid discount. Must be between 1 and 100"}), 400
 
         prefix = f"REF-{discount}-{first_name.upper()}"
         code = generate_code(prefix, suffix_length=6)
@@ -238,11 +261,11 @@ def generate_personal_code():
 
         if duration and validate_duration(duration):
             prefix = f"PERS-{duration}-{first_name.upper()}"
-        elif discount and discount.isdigit():
+        elif discount and validate_discount(discount, "variable"):
             prefix = f"PERS-{discount}-{first_name.upper()}"
         else:
             logger.warning("Invalid or missing duration/discount parameter")
-            return jsonify({"error": "Must provide either valid duration (60, 90, 110) or discount percentage"}), 400
+            return jsonify({"error": "Must provide either valid duration (60, 90, 110) or discount between 1 and 100"}), 400
 
         code = generate_code(prefix, suffix_length=6)
         logger.info(f"Generated personal code for {first_name}")

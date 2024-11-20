@@ -49,7 +49,7 @@ Generate referral discount codes.
 **Method:** GET  
 **Parameters:**
 - `first_name`: (Required) Referring customer's name
-- `discount`: (Required) Percentage: 20 or 50
+- `discount`: (Required) Percentage: 1-100
 
 **Example:**  
 ```
@@ -121,15 +121,15 @@ Generate personal massage codes.
 - Either:
   - `duration`: Minutes: 60, 90, 110
   - OR
-  - `discount`: Percentage: 20 or 50
+  - `discount`: Percentage: 1-100
 
 **Examples:**  
 ```
 GET /api/v1/code-generator/generate/personal-code?duration=90&first_name=Rebecca
 Response: {"code": "PERS-90-REBECCA-ABCD12"}
 
-GET /api/v1/code-generator/generate/personal-code?discount=20&first_name=Emily
-Response: {"code": "PERS-20-EMILY-ABCD12"}
+GET /api/v1/code-generator/generate/personal-code?discount=25&first_name=Emily
+Response: {"code": "PERS-25-EMILY-ABCD12"}
 ```
 
 ## Code Format Details

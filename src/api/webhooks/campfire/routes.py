@@ -34,66 +34,103 @@ def get_base_url():
         return "http://localhost:8080/api/v1/code-generator/generate"
     return "https://app.rosedalemassage.co.uk/api/v1/code-generator/generate"
 
+
 def get_help_message():
     return """
-    <style>li {margin-bottom: 20px;}</style>
-    <p>📋 <strong>Available Commands:</strong></p>
-    <ol>
-        <li><strong>Unlimited Package Codes</strong><br>
-            <strong>Usage:</strong> unlimited duration=[60/90/110] first_name=[NAME]<br>
-            <strong>Example:</strong> unlimited duration=90 first_name=Rebecca<br>
-            <em>Generates:</em> UL-90-REBECCA-ABCD12
-        </li>
-        <li><strong>School Group Discount Codes</strong><br>
+    <div style="line-height: 1.5;">
+        <p>📋 <strong>Available Commands:</strong></p>
+        <br>
+
+        <div>
+            <strong>1️⃣ Unlimited Package Codes</strong><br>
+            <strong>Usage:</strong> unlimited duration=[60/90/110] first_name=[NAME] last_name=[NAME] expiration=[YYYY-MM-DD]<br>
+            <strong>Example:</strong> unlimited duration=90 first_name=Rebecca last_name=Smith expiration=2024-12-31<br>
+            <em>Generates:</em> UL-90-REBECCA-ABCD12<br>
+            <em>Description:</em> Unlimited-90-Rebecca Smith-31 Dec 2024
+        </div>
+        <br>
+
+        <div>
+            <strong>2️⃣ School Group Discount Codes</strong><br>
             <strong>Usage:</strong> school discount=[1-100]<br>
             <strong>Example:</strong> school discount=20<br>
             <em>Generates:</em> SCHL-20-ABCD12
-        </li>
-        <li><strong>Referral Discount Codes</strong><br>
-            <strong>Usage:</strong> referral first_name=[NAME] discount=[20/50]<br>
+        </div>
+        <br><br>
+
+        <div>
+            <strong>3️⃣ Referral Discount Codes</strong><br>
+            <strong>Usage:</strong> referral first_name=[NAME] discount=[1-100]<br>
             <strong>Example:</strong> referral first_name=Jane discount=50<br>
             <em>Generates:</em> REF-50-JANE-ABCD12
-        </li>
-        <li><strong>Free Guest Pass Codes</strong><br>
+        </div>
+        <br>
+
+        <div>
+            <strong>4️⃣ Free Guest Pass Codes</strong><br>
             <strong>Usage:</strong> guest duration=[60/90/110] first_name=[NAME]<br>
             <strong>Example:</strong> guest duration=60 first_name=Bob<br>
             <em>Generates:</em> FREE-60-BOB-ABCD12
-        </li>
-        <li><strong>Gift Card Codes</strong><br>
+        </div>
+        <br>
+
+        <div>
+            <strong>5️⃣ Gift Card Codes</strong><br>
             <strong>Usage:</strong> gift amount=[VALUE] type=[DIGITAL/PREMIUM] first_name=[NAME]<br>
             <strong>Examples:</strong><br>
             With name: gift amount=100 type=DIGITAL first_name=Alice<br>
             <em>Generates:</em> GIFT-DGTL-100-ALICE-K7M2P9X4<br>
             Without name: gift amount=150 type=PREMIUM<br>
             <em>Generates:</em> GIFT-PREM-150-B7K2N8L4
-        </li>
-        <li><strong>Bulk Premium Gift Cards</strong><br>
+        </div>
+        <br>
+
+        <div>
+            <strong>6️⃣ Bulk Premium Gift Cards</strong><br>
             <strong>Usage:</strong> bulk amount=[VALUE] quantity=[1-50]<br>
             <strong>Example:</strong> bulk amount=50 quantity=2<br>
             <em>Generates multiple codes like:</em><br>
             GIFT-PREM-50-B7K2N8L4<br>
             GIFT-PREM-50-X9Y4M7P2
-        </li>
-        <li><strong>Personal Massage Codes</strong><br>
+        </div>
+        <br>
+
+        <div>
+            <strong>7️⃣ Personal Massage Codes</strong><br>
             <strong>Usage:</strong><br>
             Duration-based: personal duration=[60/90/110] first_name=[NAME]<br>
-            Discount-based: personal discount=[20/50] first_name=[NAME]<br>
+            Discount-based: personal discount=[1-100] first_name=[NAME]<br>
             <strong>Examples:</strong><br>
             Duration: personal duration=90 first_name=Carol<br>
             <em>Generates:</em> PERS-90-CAROL-ABCD12<br>
-            Discount: personal discount=20 first_name=Emily<br>
-            <em>Generates:</em> PERS-20-EMILY-ABCD12
-        </li>
-        <li><strong>Daily Report</strong><br>
+            Discount: personal discount=25 first_name=Emily<br>
+            <em>Generates:</em> PERS-25-EMILY-ABCD12
+        </div>
+        <br>
+
+        <div>
+            <strong>8️⃣ Daily Report</strong><br>
             <strong>Usage:</strong> Get sales and other statistics<br>
             <strong>Example:</strong> report
-        </li>
-        <li><strong>Help</strong><br>
+        </div>
+        <br>
+
+        <div>
+            <strong>9️⃣ Help</strong><br>
             <strong>Usage:</strong> Show this help message<br>
             <strong>Example:</strong> help
-        </li>
-    </ol>
-    <p><em>Note: All codes are automatically converted to uppercase. Gift cards use 8-character unique endings, all others use 6 characters.</em></p>
+        </div>
+        <br>
+
+        <div>
+            <em>Note: All codes are automatically converted to uppercase. Gift cards use 8-character unique endings, all others use 6 characters.</em>
+        </div>
+        <br>
+
+        <div>
+            Further information is at <a href="https://github.com/tivadarorosz/rosedale/blob/main/src/api/code_generator/README.md">GitHub Documentation</a>
+        </div>
+    </div>
     """
 
 def get_code_type(code):
