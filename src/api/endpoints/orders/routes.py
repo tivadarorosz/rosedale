@@ -21,6 +21,13 @@ logger = logging.getLogger(__name__)
 
 orders_bp = Blueprint("orders", __name__)
 
+@orders_bp.before_request
+def log_request_info():
+    logger.debug(f"Method: {request.method}")
+    logger.debug(f"URL: {request.url}")
+    logger.debug(f"Headers: {dict(request.headers)}")
+    logger.debug(f"Data: {request.get_data()}")
+
 # CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
 # CHARLOTTE_FORM_ID = os.getenv("CONVERTKIT_CHARLOTTE_FORM_ID")
 # MILLS_FORM_ID = os.getenv("CONVERTKIT_MILLS_FORM_ID")
