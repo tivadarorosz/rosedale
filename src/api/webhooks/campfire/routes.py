@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 
-from src.api.utils.ip_validator import check_allowed_ip
-from src.utils.error_monitoring import handle_error
-from src.utils.campfire_utils import send_room_message
+from src.api.validators.ip_validator import check_allowed_ip
+from src.core.monitoring import handle_error
+from src.core.integrations.campfire import send_room_message
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging

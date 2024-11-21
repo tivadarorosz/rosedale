@@ -3,7 +3,7 @@ import logging
 import traceback
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from src.utils.campfire_utils import send_message
+from src.core.integrations.campfire import send_message
 
 logger = logging.getLogger(__name__)
 

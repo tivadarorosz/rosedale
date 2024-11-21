@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from src.utils.error_monitoring import handle_error
+from src.core.monitoring import handle_error
 
 logger = logging.getLogger(__name__)
 

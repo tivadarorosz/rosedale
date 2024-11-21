@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from src.utils.error_monitoring import handle_error
+from src.core.monitoring import handle_error
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from datetime import datetime

@@ -1,7 +1,7 @@
 import os
 import requests
 import logging
-from src.utils.error_monitoring import handle_error
+from src.core.monitoring import handle_error
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,9 @@
 from typing import Optional, Dict, Any, Tuple
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from flask import current_app
+from sqlalchemy.exc import IntegrityError
 import logging
 from datetime import datetime
 from models import Customer
-from src.utils.error_monitoring import handle_error
+from src.core.monitoring import handle_error
 from app import db
 
 logger = logging.getLogger(__name__)

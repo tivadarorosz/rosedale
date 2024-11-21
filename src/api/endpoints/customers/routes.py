@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
-from src.utils.api_utils import get_gender
-from src.utils.campfire_utils import send_message
-from src.api.utils.ip_validator import check_allowed_ip
+from src.core.integrations.gender_api import get_gender
+from src.core.integrations.campfire import send_message
+from src.api.validators.ip_validator import check_allowed_ip
 from src.api.middleware.validation_middleware import (
     validate_latepoint_request,
     validate_square_request

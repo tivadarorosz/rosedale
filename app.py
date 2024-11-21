@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request, Config as FlaskConfig, Response
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
 from flask_sqlalchemy import SQLAlchemy  # Add this import
-from src.utils.error_monitoring import initialize_sentry, handle_error
+from src.core.monitoring import initialize_sentry, handle_error
 import config
 import os
 
