@@ -34,85 +34,87 @@ def log_request_info():
 @orders_bp.route("/new/latepoint", methods=["POST"])
 def create_latepoint_order():
     try:
-        data = request.form.to_dict()
+        # Parse form data
+        form_data = request.form.to_dict()
 
-        # Construct JSON structure
+        # Create order structure
         order = {
-            "id": data.get('id'),
-            "confirmation_code": data.get('confirmation_code'),
-            "customer_comment": None,
-            "status": data.get('status'),
-            "fulfillment_status": data.get('fulfillment_status'),
-            "payment_status": data.get('payment_status'),
-            "source_id": None,
-            "source_url": data.get('source_url'),
-            "total": data.get('total'),
-            "subtotal": data.get('subtotal'),
-            "created_datetime": data.get('created_datetime'),
+            "id": form_data.get('id'),
+            "confirmation_code": form_data.get('confirmation_code'),
+            "status": form_data.get('status'),
+            "fulfillment_status": form_data.get('fulfillment_status'),
+            "payment_status": form_data.get('payment_status'),
+            "source_url": form_data.get('source_url', ""),
+            "total": form_data.get('total'),
+            "subtotal": form_data.get('subtotal'),
+            "created_datetime": form_data.get('created_datetime'),
             "customer": {
-                "id": data.get('customer[id]'),
-                "first_name": data.get('customer[first_name]'),
-                "last_name": data.get('customer[last_name]'),
-                "full_name": data.get('customer[full_name]'),
-                "email": data.get('customer[email]'),
-                "phone": data.get('customer[phone]'),
+                "id": form_data.get('customer[id]'),
+                "first_name": form_data.get('customer[first_name]'),
+                "last_name": form_data.get('customer[last_name]'),
+                "full_name": form_data.get('customer[full_name]'),
+                "email": form_data.get('customer[email]'),
+                "phone": form_data.get('customer[phone]'),
                 "custom_fields": {
-                    "cf_uSnk1aJv": data.get('customer[custom_fields][cf_uSnk1aJv]'),
-                    "cf_ku8f8Fd8": data.get('customer[custom_fields][cf_ku8f8Fd8]'),
-                    "cf_i6npNsJK": data.get('customer[custom_fields][cf_i6npNsJK]'),
-                    "cf_LICrcXyq": data.get('customer[custom_fields][cf_LICrcXyq]'),
-                    "cf_sIG5JoOc": data.get('customer[custom_fields][cf_sIG5JoOc]'),
-                    "cf_R5ffCcvB": data.get('customer[custom_fields][cf_R5ffCcvB]'),
-                    "cf_AYXmttXr": data.get('customer[custom_fields][cf_AYXmttXr]'),
-                    "cf_13R2jN9C": data.get('customer[custom_fields][cf_13R2jN9C]'),
-                    "cf_xGQSo978": data.get('customer[custom_fields][cf_xGQSo978]')
+                    "cf_uSnk1aJv": form_data.get('customer[custom_fields][cf_uSnk1aJv]'),
+                    "cf_ku8f8Fd8": form_data.get('customer[custom_fields][cf_ku8f8Fd8]'),
+                    "cf_i6npNsJK": form_data.get('customer[custom_fields][cf_i6npNsJK]'),
+                    "cf_LICrcXyq": form_data.get('customer[custom_fields][cf_LICrcXyq]'),
+                    "cf_sIG5JoOc": form_data.get('customer[custom_fields][cf_sIG5JoOc]'),
+                    "cf_R5ffCcvB": form_data.get('customer[custom_fields][cf_R5ffCcvB]'),
+                    "cf_AYXmttXr": form_data.get('customer[custom_fields][cf_AYXmttXr]'),
+                    "cf_13R2jN9C": form_data.get('customer[custom_fields][cf_13R2jN9C]'),
+                    "cf_xGQSo978": form_data.get('customer[custom_fields][cf_xGQSo978]')
                 }
             },
-            "transactions": [{
-                "id": data.get('transactions[0][id]'),
-                "order_id": data.get('transactions[0][order_id]'),
-                "token": data.get('transactions[0][token]'),
-                "customer_id": data.get('transactions[0][customer_id]'),
-                "processor": data.get('transactions[0][processor]'),
-                "payment_method": data.get('transactions[0][payment_method]'),
-                "status": data.get('transactions[0][status]'),
-                "amount": data.get('transactions[0][amount]')
-            }] if data.get('transactions[0][id]') else [],
-            "order_items": [{
-                "id": data.get('order_items[0][id]'),
-                "variant": data.get('order_items[0][variant]'),
-                "subtotal": data.get('order_items[0][subtotal]'),
-                "total": data.get('order_items[0][total]'),
-                "item_data": {
-                    "id": data.get('order_items[0][item_data][id]'),
-                    "booking_code": data.get('order_items[0][item_data][booking_code]'),
-                    "start_datetime": data.get('order_items[0][item_data][start_datetime]'),
-                    "end_datetime": data.get('order_items[0][item_data][end_datetime]'),
-                    "service_name": data.get('order_items[0][item_data][service_name]'),
-                    "duration": data.get('order_items[0][item_data][duration]'),
-                    "status": data.get('order_items[0][item_data][status]'),
-                    "start_date": data.get('order_items[0][item_data][start_date]'),
-                    "start_time": data.get('order_items[0][item_data][start_time]'),
-                    "timezone": data.get('order_items[0][item_data][timezone]'),
-                    "agent": {
-                        "id": data.get('order_items[0][item_data][agent][id]'),
-                        "full_name": data.get('order_items[0][item_data][agent][full_name]'),
-                        "email": data.get('order_items[0][item_data][agent][email]'),
-                        "phone": data.get('order_items[0][item_data][agent][phone]')
+            "transactions": [],
+            "order_items": [
+                {
+                    "id": form_data.get('order_items[0][id]'),
+                    "variant": form_data.get('order_items[0][variant]'),
+                    "subtotal": form_data.get('order_items[0][subtotal]'),
+                    "total": form_data.get('order_items[0][total]'),
+                    "item_data": {
+                        "id": form_data.get('order_items[0][item_data][id]'),
+                        "booking_code": form_data.get('order_items[0][item_data][booking_code]'),
+                        "start_datetime": form_data.get('order_items[0][item_data][start_datetime]'),
+                        "end_datetime": form_data.get('order_items[0][item_data][end_datetime]'),
+                        "service_name": form_data.get('order_items[0][item_data][service_name]'),
+                        "duration": form_data.get('order_items[0][item_data][duration]'),
+                        "status": form_data.get('order_items[0][item_data][status]'),
+                        "start_date": form_data.get('order_items[0][item_data][start_date]'),
+                        "start_time": form_data.get('order_items[0][item_data][start_time]'),
+                        "timezone": form_data.get('order_items[0][item_data][timezone]'),
+                        "agent": {
+                            "id": form_data.get('order_items[0][item_data][agent][id]'),
+                            "full_name": form_data.get('order_items[0][item_data][agent][full_name]'),
+                            "email": form_data.get('order_items[0][item_data][agent][email]'),
+                            "phone": form_data.get('order_items[0][item_data][agent][phone]')
+                        }
                     }
                 }
-            }]
+            ]
         }
 
-        # Add coupon if it exists
-        if data.get('coupon[coupon_code]'):
-            order["coupon"] = {
-                "coupon_code": data.get('coupon[coupon_code]'),
-                "coupon_discount": data.get('coupon[coupon_discount]')
-            }
+        # Add transactions if they exist
+        if form_data.get('transactions[0][id]'):
+            order['transactions'] = [{
+                "id": form_data.get('transactions[0][id]'),
+                "order_id": form_data.get('transactions[0][order_id]'),
+                "token": form_data.get('transactions[0][token]'),
+                "customer_id": form_data.get('transactions[0][customer_id]'),
+                "processor": form_data.get('transactions[0][processor]'),
+                "payment_method": form_data.get('transactions[0][payment_method]'),
+                "payment_portion": form_data.get('transactions[0][payment_portion]'),
+                "kind": form_data.get('transactions[0][kind]'),
+                "status": form_data.get('transactions[0][status]'),
+                "amount": form_data.get('transactions[0][amount]')
+            }]
 
-        logger.debug(f"Formatted Order Data: {order}")
-        return jsonify({"message": "Order received", "data": order}), 200
+        # Log the entire structured order
+        logger.info(f"Complete Order Data: {order}")
+
+        return jsonify(order), 200
 
     except Exception as e:
         logger.error(f"Error processing order: {str(e)}")
