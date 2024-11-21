@@ -159,7 +159,7 @@ def register_blueprints(app: Flask) -> None:
 
         # Webhook blueprints
         from src.api.webhooks.orders import orders_webhook_bp
-        from src.api.webhooks.campfire.routes import campfire_webhook
+        from src.api.webhooks.campfire import campfire_webhook
 
         app.register_blueprint(orders_webhook_bp, url_prefix="/api/v1/webhooks/orders")
         app.register_blueprint(campfire_webhook, url_prefix="/api/v1/webhooks/campfire")

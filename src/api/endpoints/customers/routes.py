@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from src.core.integrations.gender_api import get_gender
 from src.core.integrations.campfire import send_message
+from src.core.integrations.convertkit import subscribe_user, ConvertKitError
 from src.api.validators.ip_validator import check_allowed_ip
 from src.api.middleware.validation_middleware import (
     validate_latepoint_request,
@@ -10,10 +11,11 @@ from src.api.middleware.validation_middleware import (
 from services.customers import (
     create_customer,
     email_exists,
-    update_customer,
+    update_latepoint_customer,
+    update_square_customer,
     determine_customer_type
 )
-import requests
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,28 +31,6 @@ def notify_campfire(name: str, email: str, source: str) -> None:
             logger.info(f"Campfire Response: Status {status}, Body: {response}")
     except Exception as e:
         logger.error(f"Failed to notify Studio: {str(e)}")
-        # Don't raise the error - we don't want to fail the customer creation
-
-
-def subscribe_to_convertkit(email: str, first_name: str, last_name: str, form_id: str) -> None:
-    """Subscribe customer to ConvertKit."""
-    try:
-        url = f"https://api.convertkit.com/v3/forms/{form_id}/subscribe"
-        subscriber_data = {
-            "api_key": current_app.config["CONVERTKIT_API_KEY"],
-            "email": email,
-            "first_name": first_name,
-            "fields": {"last_name": last_name}
-        }
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(url, json=subscriber_data, headers=headers)
-
-        if response.status_code == 200:
-            logger.info(f"Successfully added {email} to ConvertKit form: {form_id}")
-        else:
-            logger.error(f"Failed to add {email} to ConvertKit. Status: {response.status_code}")
-    except Exception as e:
-        logger.error(f"Error adding {email} to ConvertKit: {str(e)}")
         # Don't raise the error - we don't want to fail the customer creation
 
 
@@ -92,7 +72,7 @@ def create_or_update_latepoint_customer():
 
         if customer_exists:
             # Update existing customer
-            success, error = update_customer(customer_data)
+            success, error = update_latepoint_customer(customer_data)
             if error:
                 return jsonify({"error": error}), 400
 
@@ -113,14 +93,20 @@ def create_or_update_latepoint_customer():
             "LatePoint"
         )
 
-        # Handle newsletter signup
-        if customer_data["newsletter_subscribed"]:
-            subscribe_to_convertkit(
-                customer_data["email"],
-                customer_data["first_name"],
-                customer_data["last_name"],
-                current_app.config['CONVERTKIT_CHARLOTTE_FORM_ID']
-            )
+        # Subscribe to ConvertKit
+        if customer_data.get("newsletter_subscribed"):
+            try:
+                ck_api_key = current_app.config["CONVERTKIT_API_KEY"]
+                ck_form_id = current_app.config["CONVERTKIT_CHARLOTTE_FORM_ID"]
+                ck_email = customer_data["email"]
+                ck_first_name = customer_data["first_name"]
+
+                # Subscribe using the external module
+                subscribe_user(ck_api_key, ck_form_id, ck_email, ck_first_name)
+                logger.info(f"Successfully subscribed {ck_email} to ConvertKit form {ck_form_id}.")
+            except ConvertKitError as e:
+                logger.error(f"ConvertKit subscription failed for {ck_email}: {str(e)}")
+                # Log the error, but do not block the customer creation process
 
         return jsonify({
             "id": customer_id,
@@ -177,7 +163,7 @@ def create_or_update_square_customer():
 
         if customer_exists:
             # Update existing customer
-            success, error = update_customer(customer_data)
+            success, error = update_square_customer(customer_data)
             if error:
                 return jsonify({"error": error}), 400
 
@@ -191,13 +177,20 @@ def create_or_update_square_customer():
         if error:
             return jsonify({"error": error}), 400
 
-        # Auto subscribe to newsletter
-        subscribe_to_convertkit(
-            customer_data["email"],
-            customer_data["first_name"],
-            customer_data["last_name"],
-            current_app.config['CONVERTKIT_MILLS_FORM_ID']
-        )
+        # Auto-Subscribe to newsletter
+        if customer_data.get("newsletter_subscribed"):
+            try:
+                ck_api_key = current_app.config["CONVERTKIT_API_KEY"]
+                ck_form_id = current_app.config["CONVERTKIT_MILLS_FORM_ID"]
+                ck_email = customer_data["email"]
+                ck_first_name = customer_data["first_name"]
+
+                # Subscribe using the external module
+                subscribe_user(ck_api_key, ck_form_id, ck_email, ck_first_name)
+                logger.info(f"Successfully subscribed {ck_email} to ConvertKit form {ck_form_id}.")
+            except ConvertKitError as e:
+                logger.error(f"ConvertKit subscription failed for {ck_email}: {str(e)}")
+                # Log the error, but do not block the customer creation process
 
         # Notify about new customer
         notify_campfire(

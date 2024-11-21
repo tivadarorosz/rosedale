@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from src.core.monitoring import handle_error
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from src.api.middleware.rate_limit import rate_limit
 from datetime import datetime
 import random
 import string
@@ -94,7 +95,7 @@ def authorize_request():
         return jsonify({"error": "Authorization error"}), 500
 
 @code_generator.route('/generate/unlimited', methods=['GET'])
-@limiter.limit("10 per minute")
+@rate_limit(limit=10, window=600)  # Allow 10 requests per 60 * 10 = 10 minutes per IP
 def generate_unlimited_code():
     try:
         logger.info("Generating unlimited package code")
@@ -140,7 +141,7 @@ def generate_unlimited_code():
         return jsonify({"error": "Internal Server Error"}), 500
 
 @code_generator.route('/generate/school-code', methods=['GET'])
-@limiter.limit("10 per minute")
+@rate_limit(limit=10, window=600)  # Allow 10 requests per 60 * 10 = 10 minutes per IP
 def generate_school_code():
     try:
         logger.info("Generating school code")
@@ -161,7 +162,7 @@ def generate_school_code():
         return jsonify({"error": "Internal Server Error"}), 500
 
 @code_generator.route('/generate/referral-code', methods=['GET'])
-@limiter.limit("10 per minute")
+@rate_limit(limit=10, window=600)  # Allow 10 requests per 60 * 10 = 10 minutes per IP
 def generate_referral_code():
     try:
         logger.info("Generating referral code")
@@ -186,7 +187,7 @@ def generate_referral_code():
         return jsonify({"error": "Internal Server Error"}), 500
 
 @code_generator.route('/generate/guest-pass', methods=['GET'])
-@limiter.limit("10 per minute")
+@rate_limit(limit=10, window=600)  # Allow 10 requests per 60 * 10 = 10 minutes per IP
 def generate_guest_pass_code():
     try:
         logger.info("Generating guest pass code")
@@ -211,7 +212,7 @@ def generate_guest_pass_code():
         return jsonify({"error": "Internal Server Error"}), 500
 
 @code_generator.route('/generate/gift-card', methods=['GET'])
-@limiter.limit("10 per minute")
+@rate_limit(limit=10, window=600)  # Allow 10 requests per 60 * 10 = 10 minutes per IP
 def generate_gift_card_code():
     try:
         logger.info("Generating gift card code")
