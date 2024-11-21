@@ -1,5 +1,5 @@
-from src.models.order import Order
-from src.models.customer import Customer
+from models import Order
+from models.customer import Customer
 from app import db
 
 def process_order_webhook(data, source):

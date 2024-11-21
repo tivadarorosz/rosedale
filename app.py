@@ -3,14 +3,16 @@ import logging
 from logging.handlers import RotatingFileHandler
 import traceback
 import uuid
-import signal
 from flask import Flask, jsonify, request, Config as FlaskConfig, Response
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
+from flask_sqlalchemy import SQLAlchemy  # Add this import
 from src.utils.error_monitoring import initialize_sentry, handle_error
-from config import config
+import config
 import os
 
+# Initialize SQLAlchemy without binding to an app yet
+db = SQLAlchemy()
 
 def create_app() -> Flask:
     """
@@ -25,6 +27,9 @@ def create_app() -> Flask:
     env = os.getenv("FLASK_ENV", "production")
     app.config.from_object(config[env])
 
+    # Initialize SQLAlchemy with the app
+    db.init_app(app)
+
     # Validate critical configuration
     config[env].validate_config()
     validate_configuration(app.config)
@@ -35,26 +40,12 @@ def create_app() -> Flask:
     # Initialize error tracking
     initialize_sentry()
 
-    # Initialize database connection pool
-    app.config['db_engine'] = setup_database(app.config)
-
-    # Add signal handlers for graceful shutdown
-    def cleanup_connections(signum, frame):
-        """Cleanup database connections on shutdown."""
-        app.logger.info(f"Received shutdown signal {signum}, cleaning up connections...")
-        if 'db_engine' in app.config:
-            app.config['db_engine'].dispose()
-            app.logger.info("Database connections cleaned up successfully")
-        else:
-            app.logger.warning("No database engine found to cleanup")
-
-    # Register signal handlers
-    signal.signal(signal.SIGTERM, cleanup_connections)
-    signal.signal(signal.SIGINT, cleanup_connections)
-    app.logger.info("Registered shutdown signal handlers")
-
     # Register all blueprints
     register_blueprints(app)
+
+    # Create all database tables
+    with app.app_context():
+        db.create_all()
 
     return app
 
