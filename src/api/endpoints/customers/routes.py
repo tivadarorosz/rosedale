@@ -31,7 +31,7 @@ def create_or_update_latepoint_customer():
 	try:
 		# Parse incoming request data
 		data = request.form
-		logger.info(f"Received data: {data}")
+		logger.info(f"Received LatePoint customer data: {data}")
 
 		# Extract and validate required fields
 		latepoint_id = data.get("id")

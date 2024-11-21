@@ -55,6 +55,9 @@ def register_blueprints():
         from src.api.endpoints.customers.routes import customers_bp
         app.register_blueprint(customers_bp, url_prefix='/customers')
 
+        from src.api.endpoints.orders.routes import orders_bp
+        app.register_blueprint(orders_bp, url_prefix='/orders')
+
         from src.api.endpoints.transactions.routes import transactions_bp
         app.register_blueprint(transactions_bp, url_prefix='/transactions')
 
