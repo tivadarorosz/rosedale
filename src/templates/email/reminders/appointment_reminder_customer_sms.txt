@@ -1,0 +1,1 @@
+Hi {{customer_first_name}}, just a friendly reminder of your {{service_name}} appointment at Rosedale Massage on {{start_date}} at {{start_time}}. We look forward to seeing you!

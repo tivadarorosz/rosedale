@@ -102,7 +102,7 @@ class EmailService:
 		self.session = DNSEnforcedSession()
 		
 		# Initialize Jinja2 environment for templates
-		template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates', 'emails')
+		template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates', 'email')
 		self.jinja_env = Environment(
 			loader=FileSystemLoader(template_dir),
 			autoescape=True
