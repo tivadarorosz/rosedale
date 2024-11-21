@@ -1,189 +1,318 @@
-import os
-import psycopg2
-from datetime import datetime
+from datetime import datetime, UTC
 import logging
+from logging.handlers import RotatingFileHandler
 import traceback
-from flask import Flask, jsonify, request
-from dotenv import load_dotenv
+import uuid
+import signal
+from flask import Flask, jsonify, request, Config as FlaskConfig, Response
+from sqlalchemy import create_engine, Engine
+from sqlalchemy.pool import QueuePool
 from src.utils.error_monitoring import initialize_sentry, handle_error
-
-# Create Flask app first
-app = Flask(__name__)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG if os.getenv("FLASK_DEBUG") == "1" else logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Load environment variables
-load_dotenv()
-
-# Environment configuration
-ENVIRONMENT = os.getenv("FLASK_ENV", "production")
-DEBUG_MODE = os.getenv("FLASK_DEBUG") == "1"
-
-# Initialize Sentry regardless of environment
-initialize_sentry()
-
-# Configure app based on environment
-if DEBUG_MODE:
-    app.debug = True
-    logger.info("Flask Debug is enabled.")
-
-logger.info(f"Running in {ENVIRONMENT} environment")
-
-# Configure SSL for development environment
-ssl_context = None
-if ENVIRONMENT == "development":
-    cert_path = "cert.pem"
-    key_path = "key.pem"
-
-    if os.path.exists(cert_path) and os.path.exists(key_path):
-        ssl_context = (cert_path, key_path)
-        logger.info("SSL certificates found and will be used.")
-    else:
-        logger.warning("SSL certificates not found. Running without SSL.")
+from config import config
+import os
 
 
-def register_blueprints():
-    """Register all blueprints with error handling"""
+def create_app() -> Flask:
+    """
+    Create and configure the Flask application.
+
+    Returns:
+        Flask: Configured Flask application instance
+    """
+    app = Flask(__name__)
+
+    # Load environment-specific configuration
+    env = os.getenv("FLASK_ENV", "production")
+    app.config.from_object(config[env])
+
+    # Validate critical configuration
+    config[env].validate_config()
+    validate_configuration(app.config)
+
+    # Configure logging with rotation
+    setup_logging(app)
+
+    # Initialize error tracking
+    initialize_sentry()
+
+    # Initialize database connection pool
+    app.config['db_engine'] = setup_database(app.config)
+
+    # Add signal handlers for graceful shutdown
+    def cleanup_connections(signum, frame):
+        """Cleanup database connections on shutdown."""
+        app.logger.info(f"Received shutdown signal {signum}, cleaning up connections...")
+        if 'db_engine' in app.config:
+            app.config['db_engine'].dispose()
+            app.logger.info("Database connections cleaned up successfully")
+        else:
+            app.logger.warning("No database engine found to cleanup")
+
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, cleanup_connections)
+    signal.signal(signal.SIGINT, cleanup_connections)
+    app.logger.info("Registered shutdown signal handlers")
+
+    # Register all blueprints
+    register_blueprints(app)
+
+    return app
+
+
+def setup_logging(app: Flask) -> logging.Logger:
+    """
+    Configure application logging.
+
+    Args:
+        app: Flask application instance
+    Returns:
+        logging.Logger: Configured logger instance
+    """
+    log_level = logging.DEBUG if app.config["FLASK_DEBUG"] else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s [%(levelname)s] %(message)s - %(name)s:%(lineno)d",
+        handlers=[
+            logging.StreamHandler(),
+            RotatingFileHandler(
+                'app.log',
+                maxBytes=1024 * 1024,  # 1MB
+                backupCount=10
+            )
+        ]
+    )
+    return logging.getLogger(__name__)
+
+
+def setup_database(config: FlaskConfig) -> Engine:
+    """
+    Initialize database connection pool optimized for Gunicorn workers.
+
+    Args:
+        config: Flask application configuration
+    Returns:
+        Engine: SQLAlchemy engine instance with optimized pool settings
+    """
+    return create_engine(
+        config["SQLALCHEMY_DATABASE_URI"],
+        poolclass=QueuePool,
+        pool_size=10,         # (2 workers * 4 threads) + 2 extra
+        max_overflow=20,      # Allow temporary extra connections
+        pool_timeout=30,      # Match Gunicorn timeout
+        pool_recycle=1800,    # Recycle connections every 30 minutes
+        connect_args={
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5
+        }
+    )
+
+
+def validate_configuration(config: FlaskConfig) -> None:
+    """
+    Validate application configuration.
+
+    Args:
+        config: Flask application configuration
+    Raises:
+        ValueError: If URL format is invalid or not HTTPS
+    """
+    url_configs = [
+        "CAMPFIRE_TECH_URL",
+        "CAMPFIRE_ALERT_URL",
+        "BOOKING_URL",
+        "TRACKING_BASE_URL"
+    ]
+
+    for config_key in url_configs:
+        url = config.get(config_key)
+        if url and not url.startswith("https://"):
+            raise ValueError(
+                f"Invalid URL format for {config_key}. "
+                f"Only HTTPS URLs are allowed"
+            )
+
+
+def generate_error_id() -> str:
+    """
+    Generate a unique error ID for tracking.
+
+    Returns:
+        str: Unique error identifier
+    """
+    return str(uuid.uuid4())
+
+
+def register_blueprints(app: Flask) -> None:
+    """
+    Register all application blueprints with error handling.
+
+    Args:
+        app: Flask application instance
+    Raises:
+        Exception: If blueprint registration fails
+    """
+    blueprint_logger = logging.getLogger(__name__)
+
     try:
-        logger.debug("Starting blueprint registration")
+        blueprint_logger.info("Registering blueprints...")
 
+        # API v1 blueprints
         from src.api.endpoints.customers.routes import customers_bp
-        app.register_blueprint(customers_bp, url_prefix='/customers')
-
-        from src.api.endpoints.orders.routes import orders_bp
-        app.register_blueprint(orders_bp, url_prefix='/orders')
-
-        from src.api.endpoints.transactions.routes import transactions_bp
-        app.register_blueprint(transactions_bp, url_prefix='/transactions')
-
-        from src.api.endpoints.appointments.routes import appointments_bp
-        app.register_blueprint(appointments_bp, url_prefix='/appointments')
-
-        from src.api.endpoints.square_api.routes import square_api_bp
-        app.register_blueprint(square_api_bp, url_prefix='/square')
-
         from src.api.code_generator.routes import code_generator
-        app.register_blueprint(code_generator, url_prefix='/api/v1/code-generator')
 
+        app.register_blueprint(customers_bp, url_prefix="/api/v1/customers")
+        app.register_blueprint(code_generator, url_prefix="/api/v1/code-generator")
+
+        # Webhook blueprints
+        from src.api.webhooks.orders import orders_webhook_bp
         from src.api.webhooks.campfire.routes import campfire_webhook
-        app.register_blueprint(campfire_webhook, url_prefix='/webhooks/campfire')
 
-        logger.debug("Completed blueprint registration")
+        app.register_blueprint(orders_webhook_bp, url_prefix="/api/v1/webhooks/orders")
+        app.register_blueprint(campfire_webhook, url_prefix="/api/v1/webhooks/campfire")
+
+        blueprint_logger.info("Successfully registered all blueprints")
+
     except Exception as e:
-        logger.error(f"Error registering blueprints: {str(e)}")
-        logger.error(traceback.format_exc())
-        handle_error(e, "Error registering blueprints")
+        blueprint_logger.error(f"Failed to register blueprints: {str(e)}")
+        blueprint_logger.error(traceback.format_exc())
+        handle_error(e, "Blueprint registration failed")
         raise
 
 
-# Register blueprints
-register_blueprints()
+def create_error_response(
+        error_id: str,
+        message: str,
+        status_code: int,
+        include_details: bool = False
+) -> tuple[Response, int]:
+    """
+    Create a standardized error response.
+
+    Args:
+        error_id: Unique identifier for the error
+        message: Error message to display
+        status_code: HTTP status code
+        include_details: Whether to include debug information
+    Returns:
+        tuple: JSON response and status code
+    """
+    response = {
+        "error": message,
+        "error_id": error_id,
+        "timestamp": datetime.now(UTC).isoformat()
+    }
+
+    if include_details and app.config["FLASK_DEBUG"]:
+        response["debug_info"] = traceback.format_exc()
+
+    return jsonify(response), status_code
+
+
+# Create the application instance
+app = create_app()
+logger = logging.getLogger(__name__)
 
 
 @app.route("/healthcheck")
-def healthcheck():
+def healthcheck() -> tuple[Response, int]:
     """
-    Enhanced healthcheck endpoint that verifies:
-    1. Application is running
-    2. Database connection is working
-    3. Basic environment configuration
+    Enhanced healthcheck endpoint to verify application health.
+
+    Returns:
+        tuple: JSON response and status code
     """
+    status = {
+        "status": "healthy",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "environment": app.config["FLASK_ENV"],
+        "debug_mode": app.debug
+    }
+
     try:
-        status = {
-            "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "environment": ENVIRONMENT,
-            "debug_mode": DEBUG_MODE
-        }
-
-        # Database connection check
-        try:
-            conn = psycopg2.connect(
-                host=os.getenv("DB_HOST"),
-                database=os.getenv("DB_NAME"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                port=os.getenv("DB_PORT"),
-                connect_timeout=3
-            )
-            conn.close()
-            status["database"] = "connected"
-        except Exception as e:
-            status["database"] = "error"
-            status["status"] = "degraded"
-
-        # Check essential environment variables
-        required_vars = [
-            "SENTRY_DSN",
-            "CAMPFIRE_TECH_URL",
-            "CAMPFIRE_ALERT_URL",
-            "CAMPFIRE_WEBHOOK_TOKEN",
-            "CAMPFIRE_ROOM_TOKEN"
-        ]
-
-        missing_vars = [var for var in required_vars if not os.getenv(var)]
-        if missing_vars:
-            status["status"] = "degraded"
-            status["missing_config"] = missing_vars
-
-        return jsonify(status), 200 if status["status"] == "healthy" else 503
-
+        # Database connection check using engine from config
+        with app.config['db_engine'].connect() as conn:
+            conn.execute("SELECT 1")
+        status["database"] = "connected"
     except Exception as e:
-        return jsonify({
-            "status": "unhealthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "error": str(e)
-        }), 503
+        logger.error(f"Database healthcheck failed: {str(e)}")
+        status["database"] = "error"
+        status["status"] = "degraded"
 
+    status_code = 200 if status["status"] == "healthy" else 503
+    return jsonify(status), status_code
 
-def print_registered_routes():
-    print("\nRegistered Routes:")
-    for rule in app.url_map.iter_rules():
-        print(f"{rule.endpoint}: {rule.rule} [{', '.join(rule.methods)}]")
-
-
-# Print registered routes
-print_registered_routes()
-
-# 404 Error Handler
-@app.errorhandler(404)
-def not_found_error(e):
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    logger.error(
-        f"404 Error: {e.description} - URL: {request.url} - "
-        f"IP: {client_ip} - Method: {request.method} - "
-        f"User-Agent: {request.headers.get('User-Agent')}"
-    )
-
-    ignored_paths = ["/phpmyadmin", "/wp-admin"]
-    if request.path in ignored_paths:
-        return jsonify({"error": "URL not found"}), 404
-
-    return jsonify({"error": "Resource not found"}), 404
 
 @app.route("/")
-def home():
-    app.logger.debug("Received request for home route")
-    return "Welcome to Rosedale Massage API"
+def home() -> tuple[Response, int]:
+    """
+    Home route.
+
+    Returns:
+        tuple: JSON response and status code
+    """
+    return jsonify({
+        "name": "Rosedale Massage API",
+        "version": "1.0",
+        "status": "running"
+    }), 200
+
+
+@app.errorhandler(404)
+def not_found_error(error: Exception) -> tuple[Response, int]:
+    """
+    Handle 404 errors.
+
+    Args:
+        error: The exception that triggered this handler
+    Returns:
+        tuple: JSON response and status code
+    """
+    error_id = generate_error_id()
+
+    logger.info(
+        f"404 Error (ID: {error_id}) - "
+        f"Method: {request.method} - "
+        f"Path: {request.path} - "
+        f"Error: {str(error)}"
+    )
+
+    return create_error_response(
+        error_id,
+        "Resource not found",
+        404
+    )
 
 
 @app.errorhandler(Exception)
-def handle_exception(e):
-    """Global exception handler"""
-    error_details = traceback.format_exc()
-    logger.error("An unexpected error occurred:\n%s", error_details)
-    handle_error(e, "Unhandled exception in application")
-    return jsonify({"error": "An unexpected error occurred"}), 500
+def handle_exception(error: Exception) -> tuple[Response, int]:
+    """
+    Global exception handler.
+
+    Args:
+        error: The exception that triggered this handler
+    Returns:
+        tuple: JSON response and status code
+    """
+    error_id = generate_error_id()
+
+    logger.error(
+        f"Unhandled exception (ID: {error_id}): {str(error)}\n"
+        f"{traceback.format_exc()}"
+    )
+
+    handle_error(error, f"Unhandled exception (ID: {error_id})")
+
+    return create_error_response(
+        error_id,
+        "An unexpected error occurred",
+        500,
+        include_details=True
+    )
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))
-    if ENVIRONMENT == "development" and ssl_context:
-        app.run(host='0.0.0.0', port=port, ssl_context=ssl_context, debug=DEBUG_MODE)
-    else:
-        app.run(host='0.0.0.0', port=port, debug=DEBUG_MODE)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
