@@ -111,7 +111,7 @@ def create_latepoint_order():
                 "coupon_discount": data.get('coupon[coupon_discount]')
             }
 
-        logger.info(f"Formatted Order Data: {order}")
+        logger.debug(f"Formatted Order Data: {order}")
         return jsonify({"message": "Order received", "data": order}), 200
 
     except Exception as e:
