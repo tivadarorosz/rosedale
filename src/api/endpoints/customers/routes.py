@@ -3,6 +3,7 @@ import os
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from src.utils.api_utils import get_gender
 from src.utils.campfire_utils import send_message
+from src.api.utils.ip_validator import check_allowed_ip
 from convertkit import ConvertKit
 import requests
 import logging
@@ -28,6 +29,10 @@ MILLS_FORM_ID = os.getenv("CONVERTKIT_MILLS_FORM_ID")
 
 @customers_bp.route("/new/latepoint", methods=["POST"])
 def create_or_update_latepoint_customer():
+	is_allowed, response = check_allowed_ip(request, 'latepoint')
+	if not is_allowed:
+		return response
+
 	try:
 		# Parse incoming request data
 		data = request.form

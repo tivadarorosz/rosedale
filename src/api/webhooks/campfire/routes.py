@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify
+
+from src.api.utils.ip_validator import check_allowed_ip
 from src.utils.error_monitoring import handle_error
 from src.utils.campfire_utils import send_room_message
 from flask_limiter import Limiter
@@ -188,6 +190,10 @@ def generate_code(command, params):
 @campfire_webhook.route('/<token>', methods=['POST'], strict_slashes=False)
 @limiter.limit("20 per minute")
 def handle_webhook(token):
+    is_allowed, response = check_allowed_ip(request, 'campfire')
+    if not is_allowed:
+        return response
+
     data = request.json
     room_id = data.get("room", {}).get("id")
     try:
