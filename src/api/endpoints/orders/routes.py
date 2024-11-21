@@ -34,17 +34,85 @@ def log_request_info():
 @orders_bp.route("/new/latepoint", methods=["POST"])
 def create_latepoint_order():
     try:
-        # Parse form data
-        # data = request.form.to_dict()
+        data = request.form.to_dict()
 
-        # Log raw request data
-        logger.info("Raw Request Data:")
-        logger.info(f"Headers: {dict(request.headers)}")
-        logger.info(f"Form Data: {request.form.to_dict()}")
-        logger.info(f"JSON Data: {request.get_json(silent=True)}")
-        logger.info(f"Raw Data: {request.get_data(as_text=True)}")
+        # Construct JSON structure
+        order = {
+            "id": data.get('id'),
+            "confirmation_code": data.get('confirmation_code'),
+            "customer_comment": None,
+            "status": data.get('status'),
+            "fulfillment_status": data.get('fulfillment_status'),
+            "payment_status": data.get('payment_status'),
+            "source_id": None,
+            "source_url": data.get('source_url'),
+            "total": data.get('total'),
+            "subtotal": data.get('subtotal'),
+            "created_datetime": data.get('created_datetime'),
+            "customer": {
+                "id": data.get('customer[id]'),
+                "first_name": data.get('customer[first_name]'),
+                "last_name": data.get('customer[last_name]'),
+                "full_name": data.get('customer[full_name]'),
+                "email": data.get('customer[email]'),
+                "phone": data.get('customer[phone]'),
+                "custom_fields": {
+                    "cf_uSnk1aJv": data.get('customer[custom_fields][cf_uSnk1aJv]'),
+                    "cf_ku8f8Fd8": data.get('customer[custom_fields][cf_ku8f8Fd8]'),
+                    "cf_i6npNsJK": data.get('customer[custom_fields][cf_i6npNsJK]'),
+                    "cf_LICrcXyq": data.get('customer[custom_fields][cf_LICrcXyq]'),
+                    "cf_sIG5JoOc": data.get('customer[custom_fields][cf_sIG5JoOc]'),
+                    "cf_R5ffCcvB": data.get('customer[custom_fields][cf_R5ffCcvB]'),
+                    "cf_AYXmttXr": data.get('customer[custom_fields][cf_AYXmttXr]'),
+                    "cf_13R2jN9C": data.get('customer[custom_fields][cf_13R2jN9C]'),
+                    "cf_xGQSo978": data.get('customer[custom_fields][cf_xGQSo978]')
+                }
+            },
+            "transactions": [{
+                "id": data.get('transactions[0][id]'),
+                "order_id": data.get('transactions[0][order_id]'),
+                "token": data.get('transactions[0][token]'),
+                "customer_id": data.get('transactions[0][customer_id]'),
+                "processor": data.get('transactions[0][processor]'),
+                "payment_method": data.get('transactions[0][payment_method]'),
+                "status": data.get('transactions[0][status]'),
+                "amount": data.get('transactions[0][amount]')
+            }] if data.get('transactions[0][id]') else [],
+            "order_items": [{
+                "id": data.get('order_items[0][id]'),
+                "variant": data.get('order_items[0][variant]'),
+                "subtotal": data.get('order_items[0][subtotal]'),
+                "total": data.get('order_items[0][total]'),
+                "item_data": {
+                    "id": data.get('order_items[0][item_data][id]'),
+                    "booking_code": data.get('order_items[0][item_data][booking_code]'),
+                    "start_datetime": data.get('order_items[0][item_data][start_datetime]'),
+                    "end_datetime": data.get('order_items[0][item_data][end_datetime]'),
+                    "service_name": data.get('order_items[0][item_data][service_name]'),
+                    "duration": data.get('order_items[0][item_data][duration]'),
+                    "status": data.get('order_items[0][item_data][status]'),
+                    "start_date": data.get('order_items[0][item_data][start_date]'),
+                    "start_time": data.get('order_items[0][item_data][start_time]'),
+                    "timezone": data.get('order_items[0][item_data][timezone]'),
+                    "agent": {
+                        "id": data.get('order_items[0][item_data][agent][id]'),
+                        "full_name": data.get('order_items[0][item_data][agent][full_name]'),
+                        "email": data.get('order_items[0][item_data][agent][email]'),
+                        "phone": data.get('order_items[0][item_data][agent][phone]')
+                    }
+                }
+            }]
+        }
 
-        return jsonify({"message": "Order data received and logged"}), 200
+        # Add coupon if it exists
+        if data.get('coupon[coupon_code]'):
+            order["coupon"] = {
+                "coupon_code": data.get('coupon[coupon_code]'),
+                "coupon_discount": data.get('coupon[coupon_discount]')
+            }
+
+        logger.info(f"Formatted Order Data: {order}")
+        return jsonify({"message": "Order received", "data": order}), 200
 
     except Exception as e:
         logger.error(f"Error processing order: {str(e)}")
