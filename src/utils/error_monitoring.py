@@ -8,27 +8,27 @@ from src.utils.campfire_utils import send_message
 logger = logging.getLogger(__name__)
 
 def initialize_sentry():
-    """Initialize Sentry for error monitoring."""
-    sentry_sdk.init(
-        dsn=os.getenv("SENTRY_DSN"),
-        integrations=[FlaskIntegration()],
-        traces_sample_rate=1.0,  # Adjust as needed
-        environment=os.getenv("FLASK_ENV", "production"),
-        debug=False  # Disable Sentry-specific debug mode
-    )
+	"""Initialize Sentry for error monitoring."""
+	sentry_sdk.init(
+		dsn=os.getenv("SENTRY_DSN"),
+		integrations=[FlaskIntegration()],
+		traces_sample_rate=1.0,  # Adjust as needed
+		environment=os.getenv("FLASK_ENV", "production"),
+		debug=False  # Disable Sentry-specific debug mode
+	)
 
-    # Suppress DEBUG logs from Sentry
-    sentry_logger = logging.getLogger("sentry_sdk")
-    sentry_logger.setLevel(logging.WARNING)
+	# Suppress DEBUG logs from Sentry
+	sentry_logger = logging.getLogger("sentry_sdk")
+	sentry_logger.setLevel(logging.WARNING)
 
-    # Suppress DEBUG logs from urllib3
-    urllib3_logger = logging.getLogger("urllib3")
-    urllib3_logger.setLevel(logging.WARNING)
+	# Suppress DEBUG logs from urllib3
+	urllib3_logger = logging.getLogger("urllib3")
+	urllib3_logger.setLevel(logging.WARNING)
 
-    # Debug: Check log levels only if FLASK_DEBUG=1
-    if os.getenv("FLASK_DEBUG") == "1":
-        print(f"sentry_sdk log level: {sentry_logger.getEffectiveLevel()}")
-        print(f"urllib3 log level: {urllib3_logger.getEffectiveLevel()}")
+	# Debug: Check log levels only if FLASK_DEBUG=1
+	if os.getenv("FLASK_DEBUG") == "1":
+		print(f"sentry_sdk log level: {sentry_logger.getEffectiveLevel()}")
+		print(f"urllib3 log level: {urllib3_logger.getEffectiveLevel()}")
 
 def format_error_message(error, extra_info=None):
 	"""Format error message for Campfire"""

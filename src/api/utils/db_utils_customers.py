@@ -249,5 +249,5 @@ def determine_customer_type(email):
 		return "client"
 	except Exception as e:
 		logger.error(f"Error determining customer type: {e}")
-		handle_error(error, "Database operation error")
+		handle_error(e, "Database operation error")
 		return "client"  # Default to client if there's any error

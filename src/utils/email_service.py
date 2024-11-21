@@ -1,13 +1,14 @@
-import os
 import logging
+import os
+import time
+from typing import Optional, Dict, Any
+
+import dns.resolver
 import requests
+from jinja2 import Environment, FileSystemLoader
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from typing import Optional, Dict, Any
-import socket
-import dns.resolver
-import time
-from jinja2 import Environment, FileSystemLoader
+
 from src.utils.error_monitoring import handle_error
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DNSEnforcedSession(requests.Session):
 	"""Custom session class with enhanced DNS resolution for Kubernetes environments"""
 	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
+		super().__init__()
 		self.resolver = self._configure_dns()
 		
 		# Configure retry strategy
@@ -26,10 +27,10 @@ class DNSEnforcedSession(requests.Session):
 			allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"]
 		)
 		adapter = HTTPAdapter(max_retries=retry_strategy)
-		self.mount("http://", adapter)
 		self.mount("https://", adapter)
 
-	def _configure_dns(self):
+	@staticmethod
+	def _configure_dns():
 		"""Configure DNS resolver with Kubernetes settings"""
 		try:
 			resolver = dns.resolver.Resolver()
