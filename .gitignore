@@ -17,3 +17,6 @@ venv
 # Ignore PyCharm files
 .idea/
 *.iml
+
+#SQLAlchemy
+migrations
