@@ -1,51 +1,16 @@
-from flask import Blueprint, request, jsonify, current_app
-from square.utilities.webhooks_helper import is_valid_webhook_event_signature
-from src.utils.gender_api import get_gender
-from src.core.integrations.campfire import send_message
-from src.core.integrations.convertkit import subscribe_user, ConvertKitError
-from src.api.validators.ip_validator import check_allowed_ip
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from src.core.monitoring import handle_error
-from src.api.middleware.validation_middleware import (
-    validate_latepoint_request,
-    validate_square_request
-)
-
-from src.services.customers import CustomerService
-
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Define the blueprint
-customers_bp = Blueprint("customers", __name__)
-
-def notify_campfire(name: str, email: str, source: str) -> None:
-    """Send notification to Campfire about new customer."""
-    try:
-        message = f"🎉 New {source.title()} Customer: {name} ({email}) just signed up!"
-        if current_app.config["FLASK_ENV"] != "development":
-            status, response = send_message("studio", message)
-            logger.info(f"Campfire Response: Status {status}, Body: {response}")
-    except Exception as e:
-        logger.error(f"Failed to notify Studio: {str(e)}")
-        # Don't raise the error - we don't want to fail the customer creation
-
-
+from src.services.notification_service import NotificationService
 from flask import Blueprint, request, jsonify, current_app
 import json
+from src.services.customers import CustomerService
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 from src.utils.gender_api import get_gender
-from src.core.integrations.campfire import send_message
 from src.core.integrations.convertkit import subscribe_user, ConvertKitError
-from src.api.validators.ip_validator import check_allowed_ip
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from src.core.monitoring import handle_error
 from src.api.middleware.validation_middleware import (
     validate_latepoint_request,
     validate_square_request
 )
-from src.services.customers import CustomerService
 
 import logging
 
@@ -53,25 +18,11 @@ logger = logging.getLogger(__name__)
 
 # Define the blueprint
 customers_bp = Blueprint("customers", __name__)
-
-def notify_campfire(name: str, email: str, source: str) -> None:
-    """Send notification to Campfire about new customer."""
-    try:
-        message = f"🎉 New {source.title()} Customer: {name} ({email}) just signed up!"
-        if current_app.config["FLASK_ENV"] != "development":
-            status, response = send_message("studio", message)
-            logger.info(f"Campfire Response: Status {status}, Body: {response}")
-    except Exception as e:
-        logger.error(f"Failed to notify Studio: {str(e)}")
 
 @customers_bp.route("/latepoint/new", methods=["POST"])
 @validate_latepoint_request
 def latepoint_new_customer():
     try:
-        # IP validation
-        is_allowed, response = check_allowed_ip(request, 'latepoint')
-        if not is_allowed:
-            return response
 
         data = request.form.to_dict()
         custom_fields = json.loads(data.get("custom_fields", "{}"))
@@ -109,15 +60,9 @@ def latepoint_new_customer():
         # Create new customer
         new_customer = CustomerService.create_latepoint_customer(customer_data)
 
-        # Notify Campfire (non-blocking)
-        try:
-            notify_campfire(
-                f"{new_customer.first_name} {new_customer.last_name}",
-                new_customer.email,
-                "LatePoint"
-            )
-        except Exception as e:
-            logger.error(f"Campfire notification failed: {str(e)}")
+        # Notify Campfire about new customer
+        message = f"🎉 New LatePoint Customer: {new_customer.first_name} {new_customer.last_name} ({new_customer.email}) just signed up!"
+        NotificationService.notify_campfire(message, "studio")
 
         return jsonify({
             "message": "Customer created successfully",

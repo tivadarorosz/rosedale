@@ -3,6 +3,7 @@ from flask import request, jsonify
 import json
 import logging
 from src.api.validators.customer_validators import CustomerValidator
+from src.api.validators.ip_validator import check_allowed_ip
 from src.core.monitoring import handle_error
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,11 @@ def validate_latepoint_request(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
+            # IP validation
+            is_allowed, response = check_allowed_ip(request, 'latepoint')
+            if not is_allowed:
+                return response
+
             data = request.form.to_dict()
 
             # Parse custom fields if present
