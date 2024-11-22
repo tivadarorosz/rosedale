@@ -8,11 +8,12 @@ from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from app.core.monitoring import initialize_sentry, handle_error
-import config
+from src.core.monitoring import initialize_sentry, handle_error
+from config import config
+from src.extensions import db, migrate
 import os
 
-# Initialize SQLAlchemy without binding to an app yet
+# Initialize SQLAlchemy without binding to an src yet
 db = SQLAlchemy()
 
 def create_app() -> Flask:
@@ -28,11 +29,11 @@ def create_app() -> Flask:
     env = os.getenv("FLASK_ENV", "production")
     app.config.from_object(config[env])
 
-    # Initialize SQLAlchemy with the app
+    # Initialize SQLAlchemy with the src
     db.init_app(app)
 
     # Initialize Flask-Migrate
-    migrate = Migrate(app, db)
+    migrate.init_app(app, db)
 
     # Validate critical configuration
     config[env].validate_config()
@@ -70,7 +71,7 @@ def setup_logging(app: Flask) -> logging.Logger:
         handlers=[
             logging.StreamHandler(),
             RotatingFileHandler(
-                'app.log',
+                'src.log',
                 maxBytes=1024 * 1024,  # 1MB
                 backupCount=10
             )
@@ -155,13 +156,13 @@ def register_blueprints(app: Flask) -> None:
         blueprint_logger.info("Registering blueprints...")
 
         # API v1 blueprints
-        from app.services.giftcards import code_generator
+        from src.services.giftcards import code_generator
         app.register_blueprint(code_generator, url_prefix="/api/v1/code-generator")
 
         # Webhook blueprints
-        from app.api.webhooks.customers import customers_bp
-        from app.api.webhooks.orders import orders_bp
-        from app.api.webhooks.campfire import campfire_webhook
+        from src.api.webhooks.customers import customers_bp
+        from src.api.webhooks.orders import orders_bp
+        from src.api.webhooks.campfire import campfire_webhook
 
         app.register_blueprint(customers_bp, url_prefix="/api/v1/webhooks/customers")
         app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")
