@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.orders import process_order_webhook
+from app.services.orders import process_order_webhook
 
 # Create a Flask blueprint for webhooks
 orders_bp = Blueprint("orders", __name__)

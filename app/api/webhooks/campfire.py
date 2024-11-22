@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
-from src.api.validators.ip_validator import check_allowed_ip
-from src.core.monitoring import handle_error
-from src.core.integrations.campfire import send_room_message
+from app.api.validators.ip_validator import check_allowed_ip
+from app.core.monitoring import handle_error
+from app.core.integrations.campfire import send_room_message
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
 import traceback
-from services.chatbot import handle_command
+from app.services.chatbot import handle_command
 from flask import current_app
 
 logger = logging.getLogger(__name__)

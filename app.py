@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request, Config as FlaskConfig, Response
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
 from flask_sqlalchemy import SQLAlchemy  # Add this import
-from src.core.monitoring import initialize_sentry, handle_error
+from app.core.monitoring import initialize_sentry, handle_error
 import config
 import os
 
@@ -151,13 +151,13 @@ def register_blueprints(app: Flask) -> None:
         blueprint_logger.info("Registering blueprints...")
 
         # API v1 blueprints
-        from src.api.code_generator.routes import code_generator
+        from app.services.giftcards import code_generator
         app.register_blueprint(code_generator, url_prefix="/api/v1/code-generator")
 
         # Webhook blueprints
-        from src.api.webhooks.customers import customers_bp
-        from src.api.webhooks.orders import orders_bp
-        from src.api.webhooks.campfire import campfire_webhook
+        from app.api.webhooks.customers import customers_bp
+        from app.api.webhooks.orders import orders_bp
+        from app.api.webhooks.campfire import campfire_webhook
 
         app.register_blueprint(customers_bp, url_prefix="/api/v1/webhooks/customers")
         app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")

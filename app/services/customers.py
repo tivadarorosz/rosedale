@@ -2,8 +2,8 @@ from typing import Optional, Dict, Any, Tuple
 from sqlalchemy.exc import IntegrityError
 import logging
 from datetime import datetime
-from models import Customer
-from src.core.monitoring import handle_error
+from app.models import Customer
+from app.core.monitoring import handle_error
 from app import db
 
 logger = logging.getLogger(__name__)

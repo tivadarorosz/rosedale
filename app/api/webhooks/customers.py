@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify, current_app
 from square.utilities.webhooks_helper import is_valid_webhook_event_signature
-from src.core.integrations.gender_api import get_gender
-from src.core.integrations.campfire import send_message
-from src.core.integrations.convertkit import subscribe_user, ConvertKitError
-from src.api.validators.ip_validator import check_allowed_ip
-from src.api.middleware.validation_middleware import (
+from app.utils.gender_api import get_gender
+from app.core.integrations.campfire import send_message
+from app.core.integrations.convertkit import subscribe_user, ConvertKitError
+from app.api.validators.ip_validator import check_allowed_ip
+from app.api.middleware.validation_middleware import (
     validate_latepoint_request,
     validate_square_request
 )
-from services.customers import (
+from app.services.customers import (
     create_customer,
     email_exists,
     update_latepoint_customer,

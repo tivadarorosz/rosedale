@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify
-from src.api.validators.customer_validators import CustomerValidator
+from app.api.validators.customer_validators import CustomerValidator
 import logging
 
 logger = logging.getLogger(__name__)

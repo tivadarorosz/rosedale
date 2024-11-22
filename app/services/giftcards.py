@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
-from src.core.monitoring import handle_error
+from app.core.monitoring import handle_error
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from src.api.middleware.rate_limit import rate_limit
+from app.api.middleware.rate_limit import rate_limit
 from datetime import datetime
 import random
 import string
