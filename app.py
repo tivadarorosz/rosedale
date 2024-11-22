@@ -6,7 +6,8 @@ import uuid
 from flask import Flask, jsonify, request, Config as FlaskConfig, Response
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
-from flask_sqlalchemy import SQLAlchemy  # Add this import
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from app.core.monitoring import initialize_sentry, handle_error
 import config
 import os
@@ -29,6 +30,9 @@ def create_app() -> Flask:
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)
+
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, db)
 
     # Validate critical configuration
     config[env].validate_config()
@@ -202,7 +206,7 @@ def create_error_response(
     return jsonify(response), status_code
 
 
-# Create the application instance
+# Create the application instance using the factory function
 app = create_app()
 logger = logging.getLogger(__name__)
 
