@@ -14,7 +14,7 @@ def validate_latepoint_request(f):
     def decorated_function(*args, **kwargs):
         try:
             # IP validation
-            is_allowed, response = check_allowed_ip(request, 'latepoint')
+            is_allowed, response = check_allowed_ip(request)
             if not is_allowed:
                 return response
 

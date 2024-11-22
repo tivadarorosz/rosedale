@@ -159,10 +159,7 @@ class CustomerService:
             return None
 
         # Update fields if provided in data
-        updateable_fields = [
-            'first_name', 'last_name', 'email', 'phone_number',
-            'booking_system_id', 'primary_address', 'session_preferences'
-        ]
+        updateable_fields = ['first_name', 'last_name', 'booking_system_id', 'session_preferences']
 
         for field in updateable_fields:
             if field in data:

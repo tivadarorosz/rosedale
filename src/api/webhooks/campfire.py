@@ -21,7 +21,7 @@ limiter = Limiter(
 @campfire_webhook.route('/<token>', methods=['POST'], strict_slashes=False)
 @limiter.limit("20 per minute")
 def chatbot(token):
-    is_allowed, response = check_allowed_ip(request, 'campfire')
+    is_allowed, response = check_allowed_ip(request)
     if not is_allowed:
         return response
 
