@@ -151,17 +151,17 @@ def register_blueprints(app: Flask) -> None:
         blueprint_logger.info("Registering blueprints...")
 
         # API v1 blueprints
-        from src.api.endpoints.customers.routes import customers_bp
         from src.api.code_generator.routes import code_generator
-
-        app.register_blueprint(customers_bp, url_prefix="/api/v1/customers")
         app.register_blueprint(code_generator, url_prefix="/api/v1/code-generator")
 
         # Webhook blueprints
-        from src.api.webhooks.orders import orders_webhook_bp
+        from src.api.webhooks.customers import customers_bp
+        from src.api.webhooks.orders import orders_bp
         from src.api.webhooks.campfire import campfire_webhook
 
-        app.register_blueprint(orders_webhook_bp, url_prefix="/api/v1/webhooks/orders")
+        app.register_blueprint(customers_bp, url_prefix="/api/v1/webhooks/customers")
+        app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")
+
         app.register_blueprint(campfire_webhook, url_prefix="/api/v1/webhooks/campfire")
 
         blueprint_logger.info("Successfully registered all blueprints")

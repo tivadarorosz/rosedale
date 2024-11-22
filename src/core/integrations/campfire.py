@@ -1,13 +1,10 @@
 import os
 import requests
-from dotenv import load_dotenv
 import logging
 
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-
-# Map channels to their URLs directly from environment variables
+# Load environment variables
 CAMPFIRE_URLS = {
     "studio": os.getenv("CAMPFIRE_STUDIO_URL"),
     "finance": os.getenv("CAMPFIRE_FINANCE_URL"),
@@ -16,21 +13,28 @@ CAMPFIRE_URLS = {
     "bot": os.getenv("CAMPFIRE_BOT_URL"),
 }
 
+def get_campfire_url(room_id: str) -> str:
+    """
+    Generate the URL for sending messages to a specific Campfire room.
 
-def get_campfire_url(room_id):
-    """Generate Campfire URL for a specific room"""
+    :param room_id: The ID of the Campfire room.
+    :return: The full Campfire URL for the room.
+    """
     base_url = "https://chat.rosedalemassage.co.uk/rooms"
     room_token = os.getenv("CAMPFIRE_ROOM_TOKEN")
     return f"{base_url}/{room_id}/{room_token}/messages"
 
+def send_message(channel: str, message: str):
+    """
+    Send a message to a specific Campfire channel.
 
-def send_message(channel, message):
+    :param channel: The Campfire channel (e.g., "studio").
+    :param message: The message to send.
+    :return: Tuple of HTTP status code and response text.
+    """
     try:
-        """Send a message to the specified Campfire channel."""
-        logger.debug(f"Received channel name: {channel}")
-        logger.debug(f"CAMPFIRE_URLS dictionary: {CAMPFIRE_URLS}")
+        logger.debug(f"Preparing to send message to channel: {channel}")
         url = CAMPFIRE_URLS.get(channel)
-        logger.debug(f"This is the url: {url}")
 
         if not url:
             raise ValueError(f"Unknown channel: {channel}. Available channels: {list(CAMPFIRE_URLS.keys())}")
@@ -38,8 +42,6 @@ def send_message(channel, message):
         headers = {
             "Content-Type": "text/html",
         }
-
-        # Encode the message in UTF-8
         encoded_message = message.encode("utf-8")
 
         logger.info(f"Sending message to {channel} ({url}): {message}")
@@ -48,11 +50,9 @@ def send_message(channel, message):
         logger.debug(f"Response Status Code: {response.status_code}")
         logger.debug(f"Response Text: {response.text or '<empty>'}")
 
-        # Treat 2xx status codes as success
         if 200 <= response.status_code < 300:
             return response.status_code, response.text or "Message sent successfully"
 
-        # Handle non-2xx responses as errors
         raise Exception(f"Campfire error: HTTP {response.status_code}, Body: {response.text or '<no response body>'}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Error sending message to Campfire: {str(e)}")
@@ -61,20 +61,24 @@ def send_message(channel, message):
         logger.error(f"Unexpected error sending message to Campfire: {str(e)}")
         raise
 
+def send_room_message(room_id: str, message: str, user_name: str = None):
+    """
+    Send a message to a specific Campfire room.
 
-def send_room_message(room_id, message, user_name=None):
-    """Send a message to a specific Campfire room"""
+    :param room_id: The ID of the Campfire room.
+    :param message: The message to send.
+    :param user_name: Optional username to mention in the message.
+    :return: Tuple of HTTP status code and response text.
+    """
     try:
         url = get_campfire_url(room_id)
 
-        # Add user mention if provided
         if user_name:
             message = f"@{user_name} {message}"
 
         headers = {
             "Content-Type": "text/html",
         }
-
         encoded_message = message.encode("utf-8")
 
         logger.info(f"Sending message to room {room_id}: {message}")

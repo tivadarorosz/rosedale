@@ -19,8 +19,9 @@ from services.customers import (
 import logging
 
 logger = logging.getLogger(__name__)
-customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
+# Define the blueprint
+customers_bp = Blueprint("customers", __name__)
 
 def notify_campfire(name: str, email: str, source: str) -> None:
     """Send notification to Campfire about new customer."""
@@ -34,10 +35,12 @@ def notify_campfire(name: str, email: str, source: str) -> None:
         # Don't raise the error - we don't want to fail the customer creation
 
 
-@customers_bp.route("/new/latepoint", methods=["POST"])
+@customers_bp.route("/latepoint/new", methods=["POST"])
 @validate_latepoint_request
-def create_or_update_latepoint_customer():
+def latepoint_new_customer_webhook():
     """Handle new customer creation/update from LatePoint."""
+
+    # Check if IP is whitelisted
     is_allowed, response = check_allowed_ip(request, 'latepoint')
     if not is_allowed:
         return response
@@ -68,6 +71,7 @@ def create_or_update_latepoint_customer():
             "accepted_terms": data.get('custom_fields[cf_xGQSo978]') == "on"
         }
 
+        # Check whether the email address is in the database = the customer already exists, created by Square.
         customer_exists = email_exists(customer_data["email"])
 
         if customer_exists:
@@ -119,9 +123,9 @@ def create_or_update_latepoint_customer():
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
-@customers_bp.route("/new/square", methods=["POST"])
+@customers_bp.route("/square/new", methods=["POST"])
 @validate_square_request
-def create_or_update_square_customer():
+def square_customer_webhook():
     """Handle new customer creation/update from Square."""
     try:
         data = request.get_json()
