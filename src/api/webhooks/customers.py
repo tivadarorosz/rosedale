@@ -46,6 +46,16 @@ def handle_latepoint_customer_webhook():
             }
         }
 
+        # Ensure gender_identity is set dynamically based on first_name
+        # Include gender_identity in the data dictionary
+        try:
+            gender = get_gender(data.get("first_name", ""))
+            customer_data["gender_identity"] = gender
+        except Exception as e:
+            logger.error(f"Gender API error: {str(e)}")
+            # gender = None
+
+
         # Check for existing customer
         existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
         if existing_customer:

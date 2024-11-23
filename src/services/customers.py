@@ -96,15 +96,6 @@ class CustomerService:
         Returns:
             The newly created Customer object.
         """
-        # Ensure gender_identity is set dynamically based on first_name
-        try:
-            gender = get_gender(data.get("first_name", ""))
-        except Exception as e:
-            logger.error(f"Gender API error: {str(e)}")
-            gender = None
-
-        # Include gender_identity in the data dictionary
-        data["gender_identity"] = gender
 
         # Create a new Customer object with the provided data
         customer = Customer(**data)
