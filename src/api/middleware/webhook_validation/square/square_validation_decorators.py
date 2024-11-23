@@ -1,33 +1,28 @@
 from functools import wraps
 from flask import request, jsonify, current_app
-from square.utilities.webhooks_helper import is_valid_webhook_event_signature
-from .square_customer_webhook_validation import SquareCustomerWebhookValidator
+from src.utils.signature_validation import is_valid_webhook_event_signature
 
 def validate_square_customer_webhook(func):
+    """
+    Decorator to validate Square customer webhook requests.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Extract the Square signature from headers
+        # Extract the Square signature from the headers
         square_signature = request.headers.get('x-square-hmacsha256-signature')
+        signature_key = current_app.config.get("SQUARE_NEW_CUSTOMER_SIGNATURE_KEY")
 
-        # Validate the Square signature
-        is_from_square = is_valid_webhook_event_signature(
-            request.data.decode("utf-8"),
-            square_signature,
-            current_app.config["SQUARE_NEW_CUSTOMER_SIGNATURE_KEY"],
-            current_app.config["SQUARE_NEW_CUSTOMER_NOTIFICATION_URL"],
+        # Validate the webhook signature
+        is_valid = is_valid_webhook_event_signature(
+            body=request.data.decode('utf-8'),
+            square_signature=square_signature,
+            signature_key=signature_key,
         )
-        if not is_from_square:
+
+        if not is_valid:
             return jsonify({"error": "Invalid signature"}), 403
 
-        # Extract the payload
-        data = request.get_json()["data"]["object"]["customer"]
-
-        # Validate the payload using the validator
-        is_valid, error_message = SquareCustomerWebhookValidator.validate_customer_payload(data)
-        if not is_valid:
-            return jsonify({"error": error_message}), 400
-
-        # Proceed to the main function
+        # Proceed to the main function if the signature is valid
         return func(*args, **kwargs)
 
     return wrapper

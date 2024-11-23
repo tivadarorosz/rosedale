@@ -8,7 +8,7 @@ gunicorn==22.0.0
 
 # API integrations
 convertkit==0.4
-squareup==38.2.0.20241017  # Keep this, remove the old 'square' package
+squareup==38.2.0.20241017
 
 # Optional dependencies (if needed)
 python-dateutil==2.8.2

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from src.services.customers import CustomerService
 from src.services.notification_service import NotificationService
@@ -15,13 +15,66 @@ from src.api.middleware.webhook_validation.square.square_validation_decorators i
 )
 from src.utils.customer_data_processor import CustomerDataProcessor
 
+
 # Define the blueprint
 customers_bp = Blueprint("customers", __name__)
 
-# Utility for sending notifications
-def notify_new_customer(platform, first_name, last_name, email):
-    message = f"🎉 New {platform} Customer: {first_name} {last_name} ({email}) just signed up!"
-    NotificationService.notify_campfire(message, "studio")
+
+# Utility for handling customer creation and updates
+def process_customer_request(customer_data, platform):
+    """
+    Handles customer creation or update logic.
+
+    Args:
+        customer_data (dict): Customer information.
+        platform (str): Platform name (e.g., 'LatePoint', 'Square').
+
+    Returns:
+        tuple: JSON response and status code.
+    """
+    try:
+        # Check if the customer already exists
+        existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
+        if existing_customer:
+            updated_customer = CustomerService.update_customer(
+                existing_customer.id, customer_data
+            )
+            return (
+                jsonify(
+                    {
+                        "message": "Customer updated successfully",
+                        "action": "updated",
+                        "id": updated_customer.id,
+                    }
+                ),
+                200,
+            )
+
+        # Create a new customer
+        new_customer = CustomerService.create_customer(customer_data)
+
+        # Notify about the new customer
+        message = (
+            f"🎉 New {platform} Customer: {new_customer.first_name} "
+            f"{new_customer.last_name} ({new_customer.email}) just signed up!"
+        )
+        NotificationService.notify_campfire(message, "studio")
+
+        return (
+            jsonify(
+                {
+                    "message": "Customer created successfully",
+                    "action": "created",
+                    "id": new_customer.id,
+                }
+            ),
+            200,
+        )
+
+    except IntegrityError:
+        return jsonify({"error": "Customer already exists"}), 409
+    except SQLAlchemyError as db_error:
+        return jsonify({"error": f"Database error: {str(db_error)}"}), 500
 
 
 @customers_bp.route("/latepoint/new", methods=["POST"])
@@ -34,40 +87,19 @@ def handle_latepoint_customer_webhook():
     """
     Handles incoming customer creation or update requests from LatePoint.
     """
-    try:
-        # Parse the payload
-        data = request.form.to_dict()
-        custom_fields = CustomerDataProcessor.parse_custom_fields(data.get("custom_fields", "{}"))
-        customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="LatePoint")
-        customer_data["session_preferences"] = CustomerDataProcessor.build_session_preferences(custom_fields)
-        customer_data["gender_identity"] = get_gender(data.get("first_name", ""))
+    # Parse the payload
+    data = request.form.to_dict()
+    custom_fields = CustomerDataProcessor.parse_custom_fields(data.get("custom_fields"))
 
-        # Check if the customer already exists
-        existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
-        if existing_customer:
-            updated_customer = CustomerService.update_customer(existing_customer.id, customer_data)
-            return jsonify({
-                "message": "Customer updated successfully",
-                "action": "updated",
-                "id": updated_customer.id,
-            }), 200
+    # Build customer data
+    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="LatePoint")
+    customer_data["session_preferences"] = CustomerDataProcessor.build_session_preferences(
+        custom_fields
+    )
+    customer_data["gender_identity"] = get_gender(data.get("first_name", ""))
 
-        # Create a new customer
-        new_customer = CustomerService.create_customer(customer_data)
-
-        # Notify about the new customer
-        notify_new_customer("LatePoint", new_customer.first_name, new_customer.last_name, new_customer.email)
-
-        return jsonify({
-            "message": "Customer created successfully",
-            "action": "created",
-            "id": new_customer.id,
-        }), 200
-
-    except IntegrityError:
-        return jsonify({"error": "Customer already exists"}), 409
-    except SQLAlchemyError:
-        return jsonify({"error": "Database error"}), 500
+    # Process the customer request
+    return process_customer_request(customer_data, platform="LatePoint")
 
 
 @customers_bp.route("/square/new", methods=["POST"])
@@ -80,34 +112,11 @@ def handle_square_customer_webhook():
     """
     Handles incoming customer creation or update requests from Square.
     """
-    try:
-        # Extract customer data
-        customer = request.get_json()["data"]["object"]["customer"]
-        customer_data = CustomerDataProcessor.extract_core_customer_data(customer, source="Square")
+    # Parse the payload
+    data = request.get_json()["data"]["object"]["customer"]
 
-        # Check if the customer already exists
-        existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
-        if existing_customer:
-            updated_customer = CustomerService.update_customer(existing_customer.id, customer_data)
-            return jsonify({
-                "message": "Customer updated successfully",
-                "action": "updated",
-                "id": updated_customer.id,
-            }), 200
+    # Build customer data
+    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="Square")
 
-        # Create a new customer
-        new_customer = CustomerService.create_customer(customer_data)
-
-        # Notify about the new customer
-        notify_new_customer("Square", new_customer.first_name, new_customer.last_name, new_customer.email)
-
-        return jsonify({
-            "message": "Customer created successfully",
-            "action": "created",
-            "id": new_customer.id,
-        }), 200
-
-    except IntegrityError:
-        return jsonify({"error": "Customer already exists"}), 409
-    except SQLAlchemyError as e:
-        return jsonify({"error": "Database error"}), 500
+    # Process the customer request
+    return process_customer_request(customer_data, platform="Square")
