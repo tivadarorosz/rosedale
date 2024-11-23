@@ -5,22 +5,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def check_allowed_ip(request):
+def check_allowed_ip(client_ip):
     """
-    Check if the request IP is globally whitelisted.
+    Check if the given IP address is in the allowed list.
 
     Args:
-        request: Flask request object
+        client_ip (str): The IP address to check.
+
     Returns:
-        tuple: (bool, response)
+        bool: True if the IP is allowed, False otherwise.
     """
-    client_ip = request.headers.get('X-Real-Ip')
 
     # Fetch IPs from all environment variables
     allowed_ips = set(
         os.getenv('LATEPOINT_IP_ADDRESS', '').split(',') +
         os.getenv('CAMPFIRE_IP_ADDRESS', '').split(',') +
-        os.getenv('SQUARE_IP_ADDRESS', '').split(',')
+        os.getenv('SQUARE_IP_ADDRESS', '').split(',') +
+        os.getenv('WHITELIST_IP_ADDRESS', '').split(',')
     )
 
     # Check if IP is allowed

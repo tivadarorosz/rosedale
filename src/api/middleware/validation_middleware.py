@@ -1,79 +1,37 @@
-from functools import wraps
 from flask import request, jsonify
-import json
-import logging
-from src.api.validators.customer_validators import CustomerValidator
+from functools import wraps
 from src.api.validators.ip_validator import check_allowed_ip
-from src.core.monitoring import handle_error
 
-logger = logging.getLogger(__name__)
+def get_client_ip():
+    """
+    Extract the client's IP address from the request object.
 
+    Returns:
+        str: The client's IP address.
+    """
+    # Check for common headers that contain the client IP
+    x_forwarded_for = request.headers.get('X-Forwarded-For')
+    if x_forwarded_for:
+        # If there are multiple IPs in X-Forwarded-For, take the first one
+        return x_forwarded_for.split(',')[0].strip()
 
-def validate_latepoint_request(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            # IP validation
-            is_allowed, response = check_allowed_ip(request)
-            if not is_allowed:
-                return response
+    x_real_ip = request.headers.get('X-Real-IP')
+    if x_real_ip:
+        return x_real_ip.strip()
 
-            data = request.form.to_dict()
+    # Fallback to remote_addr
+    return request.remote_addr
 
-            # Parse custom fields if present
-            if "custom_fields" in data:
-                try:
-                    data["custom_fields"] = json.loads(data["custom_fields"])
-                except json.JSONDecodeError:
-                    logger.error("Invalid custom fields JSON format")
-                    return jsonify({
-                        "error": "Invalid custom fields format",
-                        "status": "validation_error"
-                    }), 400
+def validate_request_ip(func):
+    """
+    Middleware to validate if the client's IP is allowed.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        client_ip = get_client_ip()
 
-            valid, error = CustomerValidator.validate_latepoint_data(data)
-            if not valid:
-                logger.warning(f"Invalid LatePoint request data: {error}")
-                return jsonify({
-                    "error": error,
-                    "status": "validation_error"
-                }), 400
+        if not check_allowed_ip(client_ip):
+            return jsonify({"error": "Unauthorized IP address"}), 403
 
-            return f(*args, **kwargs)
-
-        except Exception as e:
-            logger.error(f"Error validating LatePoint request: {str(e)}")
-            handle_error(e, "Validation error in LatePoint webhook")
-            return jsonify({
-                "error": "Invalid request data",
-                "status": "validation_error"
-            }), 400
-
-    return decorated_function
-
-
-def validate_square_request(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            data = request.get_json()
-            valid, error = CustomerValidator.validate_square_data(data)
-
-            if not valid:
-                logger.warning(f"Invalid Square request data: {error}")
-                return jsonify({
-                    "error": error,
-                    "status": "validation_error"
-                }), 400
-
-            return f(*args, **kwargs)
-
-        except Exception as e:
-            logger.error(f"Error validating Square request: {str(e)}")
-            handle_error(e, "Validation error in Square webhook")
-            return jsonify({
-                "error": "Invalid request data",
-                "status": "validation_error"
-            }), 400
-
-    return decorated_function
+        return func(*args, **kwargs)
+    return wrapper

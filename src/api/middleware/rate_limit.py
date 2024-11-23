@@ -1,6 +1,7 @@
-from flask import request, jsonify
+from flask import jsonify
 from functools import wraps
 import time
+from src.api.middleware.validation_middleware import get_client_ip
 
 # A dictionary to store IP-based request data
 RATE_LIMIT_DATA = {}
@@ -15,13 +16,15 @@ def rate_limit(limit, window):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            client_ip = request.remote_addr or "unknown"  # Get the client's IP address
+            client_ip = get_client_ip()  # Use consistent IP extraction
             current_time = time.time()
 
             # Initialize or clean up expired request logs for this IP
             if client_ip not in RATE_LIMIT_DATA:
                 RATE_LIMIT_DATA[client_ip] = []
-            RATE_LIMIT_DATA[client_ip] = [t for t in RATE_LIMIT_DATA[client_ip] if t > current_time - window]
+            RATE_LIMIT_DATA[client_ip] = [
+                t for t in RATE_LIMIT_DATA[client_ip] if t > current_time - window
+            ]
 
             # Check if the IP has exceeded the limit
             if len(RATE_LIMIT_DATA[client_ip]) >= limit:

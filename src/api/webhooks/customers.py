@@ -7,10 +7,10 @@ from src.utils.gender_api import get_gender
 from src.core.integrations.convertkit import subscribe_user, ConvertKitError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from src.core.monitoring import handle_error
-from src.api.middleware.validation_middleware import (
-    validate_latepoint_request,
-    validate_square_request
-)
+from src.api.middleware.validation_middleware import validate_request_ip
+from src.api.middleware.rate_limit import rate_limit
+from src.api.middleware.webhook_validation.latepoint.latepoint_validation_decorators import validate_latepoint_customer_webhook
+from src.api.middleware.webhook_validation.square.square_validation_decorators import validate_square_customer_webhook
 
 import logging
 
@@ -20,10 +20,12 @@ logger = logging.getLogger(__name__)
 customers_bp = Blueprint("customers", __name__)
 
 @customers_bp.route("/latepoint/new", methods=["POST"])
-@validate_latepoint_request
-def latepoint_new_customer():
+@validate_request_ip
+@rate_limit(limit=20, window=60)
+@validate_latepoint_customer_webhook
+def handle_latepoint_customer_webhook():
     try:
-
+        # Convert form data to dictionary
         data = request.form.to_dict()
         custom_fields = json.loads(data.get("custom_fields", "{}"))
 
@@ -47,10 +49,7 @@ def latepoint_new_customer():
         # Check for existing customer
         existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
         if existing_customer:
-            updated_customer = CustomerService.update_latepoint_customer(
-                existing_customer.id,
-                customer_data
-            )
+            updated_customer = CustomerService.update_customer(existing_customer.id, customer_data)
             return jsonify({
                 "message": "Customer updated successfully",
                 "action": "updated",
@@ -58,7 +57,7 @@ def latepoint_new_customer():
             }), 200
 
         # Create new customer
-        new_customer = CustomerService.create_latepoint_customer(customer_data)
+        new_customer = CustomerService.create_customer(customer_data)
 
         # Notify Campfire about new customer
         message = f"🎉 New LatePoint Customer: {new_customer.first_name} {new_customer.last_name} ({new_customer.email}) just signed up!"
@@ -82,10 +81,58 @@ def latepoint_new_customer():
         handle_error(e, "Unexpected error processing LatePoint webhook")
         return jsonify({"error": "Internal server error"}), 500
 
+class CustomerDataProcessor:
+    @staticmethod
+    def parse_custom_fields(custom_fields_json):
+        """
+        Safely parse the custom_fields JSON string into a dictionary.
+        """
+        try:
+            if custom_fields_json:
+                return json.loads(custom_fields_json)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON in custom_fields")
+        return {}  # Return an empty dictionary if parsing fails
+
+    @staticmethod
+    def extract_core_customer_data(data):
+        """
+        Extract and validate the core customer data.
+        Raises:
+            ValueError: If a required field is missing.
+        """
+        required_fields = ["first_name", "last_name", "email", "id"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
+
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+
+        return {
+            "first_name": data["first_name"].strip(),
+            "last_name": data["last_name"].strip(),
+            "email": data["email"].strip(),
+            "booking_system_id": data["id"].strip(),
+        }
+
+    @staticmethod
+    def build_session_preferences(custom_fields):
+        """
+        Build session preferences from custom fields.
+        """
+        return {
+            "medical_conditions": custom_fields.get("cf_fV6mSkLi", "").strip().lower() == "yes",
+            "pressure_level": custom_fields.get("cf_BUQVMrtE", "").strip(),
+            "session_preference": custom_fields.get("cf_MYTGXxFc", "").strip(),
+            "music_preference": custom_fields.get("cf_aMKSBozK", "").strip(),
+            "aromatherapy_preference": custom_fields.get("cf_71gt8Um4", "").strip(),
+            "referral_source": custom_fields.get("cf_OXZkZKUw", "").strip(),
+            "email_subscribed": False,  # Default to False
+        }
+
 
 @customers_bp.route("/square/new", methods=["POST"])
-@validate_square_request
-def square_customer_webhook():
+@validate_square_customer_webhook
+def handle_square_customer_webhook():
     """Handle new customer creation/update from Square."""
     try:
         data = request.get_json()
