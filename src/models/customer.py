@@ -1,8 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
+from src.extensions import db
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
-
-db = SQLAlchemy()
 
 class Customer(db.Model):
     __tablename__ = "customers"

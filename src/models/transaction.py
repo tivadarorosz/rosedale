@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from src.extensions import db
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.sql import func
 
 class Transaction(db.Model):
     """

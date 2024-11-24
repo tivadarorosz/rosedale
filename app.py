@@ -6,15 +6,16 @@ import uuid
 from flask import Flask, jsonify, request, Config as FlaskConfig, Response
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.pool import QueuePool
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from src.core.monitoring import initialize_sentry, handle_error
 from config import config
 from src.extensions import db, migrate
 import os
 
-# Initialize SQLAlchemy without binding to an src yet
-db = SQLAlchemy()
+from src.models import load_models
+
+def register_models():
+    """Register all models with SQLAlchemy"""
+    return load_models()
 
 def create_app() -> Flask:
     """
@@ -23,16 +24,26 @@ def create_app() -> Flask:
     Returns:
         Flask: Configured Flask application instance
     """
+    print("Starting app creation...")
     app = Flask(__name__)
 
     # Load environment-specific configuration
+    print("Loading config...")
     env = os.getenv("FLASK_ENV", "production")
     app.config.from_object(config[env])
 
-    # Initialize SQLAlchemy with the src
+    print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+    # Initialize SQLAlchemy with the app
+    print("Initializing SQLAlchemy...")
     db.init_app(app)
 
+    # Register models
+    print("Registering models...")
+    models = register_models()
+
     # Initialize Flask-Migrate
+    print("Initializing Migrate...")
     migrate.init_app(app, db)
 
     # Validate critical configuration
@@ -48,12 +59,102 @@ def create_app() -> Flask:
     # Register all blueprints
     register_blueprints(app)
 
-    # Create all database tables
-    with app.app_context():
-        db.create_all()
+    @app.route("/healthcheck")
+    def healthcheck() -> tuple[Response, int]:
+        """
+        Enhanced healthcheck endpoint to verify application health.
+
+        Returns:
+            tuple: JSON response and status code
+        """
+        status = {
+            "status": "healthy",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "environment": app.config["FLASK_ENV"],
+            "debug_mode": app.debug
+        }
+
+        try:
+            # Database connection check using engine from config
+            with app.config['db_engine'].connect() as conn:
+                conn.execute("SELECT 1")
+            status["database"] = "connected"
+        except Exception as e:
+            logger.error(f"Database healthcheck failed: {str(e)}")
+            status["database"] = "error"
+            status["status"] = "degraded"
+
+        status_code = 200 if status["status"] == "healthy" else 503
+        return jsonify(status), status_code
+
+    @app.route("/")
+    def home() -> tuple[Response, int]:
+        """
+        Home route.
+
+        Returns:
+            tuple: JSON response and status code
+        """
+        return jsonify({
+            "name": "Rosedale Massage API",
+            "version": "1.0",
+            "status": "running"
+        }), 200
+
+    @app.errorhandler(404)
+    def not_found_error(error: Exception) -> tuple[Response, int]:
+        """
+        Handle 404 errors.
+
+        Args:
+            error: The exception that triggered this handler
+        Returns:
+            tuple: JSON response and status code
+        """
+        error_id = generate_error_id()
+
+        logger.info(
+            f"404 Error (ID: {error_id}) - "
+            f"Method: {request.method} - "
+            f"Path: {request.path} - "
+            f"Error: {str(error)}"
+        )
+
+        return create_error_response(
+            error_id,
+            "Resource not found",
+            404,
+            app=app
+        )
+
+    @app.errorhandler(Exception)
+    def handle_exception(error: Exception) -> tuple[Response, int]:
+        """
+        Global exception handler.
+
+        Args:
+            error: The exception that triggered this handler
+        Returns:
+            tuple: JSON response and status code
+        """
+        error_id = generate_error_id()
+
+        logger.error(
+            f"Unhandled exception (ID: {error_id}): {str(error)}\n"
+            f"{traceback.format_exc()}"
+        )
+
+        handle_error(error, f"Unhandled exception (ID: {error_id})")
+
+        return create_error_response(
+            error_id,
+            "An unexpected error occurred",
+            500,
+            include_details=True,
+            app=app
+        )
 
     return app
-
 
 def setup_logging(app: Flask) -> logging.Logger:
     """
@@ -71,14 +172,13 @@ def setup_logging(app: Flask) -> logging.Logger:
         handlers=[
             logging.StreamHandler(),
             RotatingFileHandler(
-                'src.log',
+                'app.log',
                 maxBytes=1024 * 1024,  # 1MB
                 backupCount=10
             )
         ]
     )
     return logging.getLogger(__name__)
-
 
 def setup_database(config: FlaskConfig) -> Engine:
     """
@@ -105,7 +205,6 @@ def setup_database(config: FlaskConfig) -> Engine:
         }
     )
 
-
 def validate_configuration(config: FlaskConfig) -> None:
     """
     Validate application configuration.
@@ -130,7 +229,6 @@ def validate_configuration(config: FlaskConfig) -> None:
                 f"Only HTTPS URLs are allowed"
             )
 
-
 def generate_error_id() -> str:
     """
     Generate a unique error ID for tracking.
@@ -139,7 +237,6 @@ def generate_error_id() -> str:
         str: Unique error identifier
     """
     return str(uuid.uuid4())
-
 
 def register_blueprints(app: Flask) -> None:
     """
@@ -166,7 +263,6 @@ def register_blueprints(app: Flask) -> None:
 
         app.register_blueprint(customers_bp, url_prefix="/customers")
         # app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")
-
         app.register_blueprint(campfire_webhook, url_prefix="/api/v1/webhooks/campfire")
 
         blueprint_logger.info("Successfully registered all blueprints")
@@ -177,12 +273,12 @@ def register_blueprints(app: Flask) -> None:
         handle_error(e, "Blueprint registration failed")
         raise
 
-
 def create_error_response(
         error_id: str,
         message: str,
         status_code: int,
-        include_details: bool = False
+        include_details: bool = False,
+        app: Flask = None
 ) -> tuple[Response, int]:
     """
     Create a standardized error response.
@@ -192,6 +288,7 @@ def create_error_response(
         message: Error message to display
         status_code: HTTP status code
         include_details: Whether to include debug information
+        app: Flask application instance
     Returns:
         tuple: JSON response and status code
     """
@@ -201,121 +298,10 @@ def create_error_response(
         "timestamp": datetime.now(UTC).isoformat()
     }
 
-    if include_details and app.config["FLASK_DEBUG"]:
+    if include_details and app and app.config.get("FLASK_DEBUG"):
         response["debug_info"] = traceback.format_exc()
 
     return jsonify(response), status_code
 
-
-# Create the application instance using the factory function
-app = create_app()
+# Initialize logger
 logger = logging.getLogger(__name__)
-
-
-@app.route("/healthcheck")
-def healthcheck() -> tuple[Response, int]:
-    """
-    Enhanced healthcheck endpoint to verify application health.
-
-    Returns:
-        tuple: JSON response and status code
-    """
-    status = {
-        "status": "healthy",
-        "timestamp": datetime.now(UTC).isoformat(),
-        "environment": app.config["FLASK_ENV"],
-        "debug_mode": app.debug
-    }
-
-    try:
-        # Database connection check using engine from config
-        with app.config['db_engine'].connect() as conn:
-            conn.execute("SELECT 1")
-        status["database"] = "connected"
-    except Exception as e:
-        logger.error(f"Database healthcheck failed: {str(e)}")
-        status["database"] = "error"
-        status["status"] = "degraded"
-
-    status_code = 200 if status["status"] == "healthy" else 503
-    return jsonify(status), status_code
-
-
-@app.route("/")
-def home() -> tuple[Response, int]:
-    """
-    Home route.
-
-    Returns:
-        tuple: JSON response and status code
-    """
-    return jsonify({
-        "name": "Rosedale Massage API",
-        "version": "1.0",
-        "status": "running"
-    }), 200
-
-
-@app.errorhandler(404)
-def not_found_error(error: Exception) -> tuple[Response, int]:
-    """
-    Handle 404 errors.
-
-    Args:
-        error: The exception that triggered this handler
-    Returns:
-        tuple: JSON response and status code
-    """
-    error_id = generate_error_id()
-
-    logger.info(
-        f"404 Error (ID: {error_id}) - "
-        f"Method: {request.method} - "
-        f"Path: {request.path} - "
-        f"Error: {str(error)}"
-    )
-
-    return create_error_response(
-        error_id,
-        "Resource not found",
-        404
-    )
-
-
-@app.errorhandler(Exception)
-def handle_exception(error: Exception) -> tuple[Response, int]:
-    """
-    Global exception handler.
-
-    Args:
-        error: The exception that triggered this handler
-    Returns:
-        tuple: JSON response and status code
-    """
-    error_id = generate_error_id()
-
-    logger.error(
-        f"Unhandled exception (ID: {error_id}): {str(error)}\n"
-        f"{traceback.format_exc()}"
-    )
-
-    handle_error(error, f"Unhandled exception (ID: {error_id})")
-
-    return create_error_response(
-        error_id,
-        "An unexpected error occurred",
-        500,
-        include_details=True
-    )
-
-
-if __name__ == "__main__":
-    # For local development
-    if os.getenv("KINSTA_ENVIRONMENT") is None:
-        # Use port 5001 locally to avoid AirPlay conflict
-        port = int(os.getenv("PORT", 5001))
-        app.run(host="0.0.0.0", port=port)
-    else:
-        # In Kinsta environment, just run the app
-        # Kinsta will handle the port binding through their environment
-        app.run()

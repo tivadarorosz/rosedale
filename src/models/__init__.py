@@ -1,21 +1,36 @@
-# Import all models for easy access
-from src.models.order import Order
-from src.models.customer import Customer
-from src.models.order_line_item import OrderLineItem
-from src.models.transaction import Transaction
-from src.models.item import Item
-from src.models.appointment import Appointment
-from src.models.agent import Agent
-from src.models.location import Location
+# src/models/__init__.py
 
-# Define which models should be available when importing from models
+# Import all models for easy access
+from .customer import Customer
+from .order import Order
+from .appointment import Appointment
+from .agent import Agent
+from .location import Location
+from .item import Item
+from .order_line_item import OrderLineItem
+from .transaction import Transaction
+
+def load_models():
+    """Load and return all models"""
+    return {
+        'Customer': Customer,
+        'Order': Order,
+        'Appointment': Appointment,
+        'Agent': Agent,
+        'Location': Location,
+        'Item': Item,
+        'OrderLineItem': OrderLineItem,
+        'Transaction': Transaction
+    }
+
 __all__ = [
     'Customer',
     'Order',
-    'OrderLineItem',
-    'Transaction',
-    'Item',
     'Appointment',
     'Agent',
     'Location',
+    'Item',
+    'OrderLineItem',
+    'Transaction',
+    'load_models'  # Added this line
 ]

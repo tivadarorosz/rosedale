@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 # Load environment variables from .env file if it exists
 if os.path.exists(".env"):
@@ -52,7 +53,7 @@ class Config:
     DB_HOST: str = os.environ["DB_HOST"]
     DB_NAME: str = os.environ["DB_NAME"]
     DB_USER: str = os.environ["DB_USER"]
-    DB_PASSWORD: str = os.environ["DB_PASSWORD"]
+    DB_PASSWORD: str = quote_plus(os.environ["DB_PASSWORD"])
     DB_PORT: str = os.getenv("DB_PORT", "5432")
 
     SQLALCHEMY_DATABASE_URI: str = (
