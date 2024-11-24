@@ -1,18 +1,18 @@
 Table customers {
     id                serial       [primary key, note: "Unique identifier for each customer."]
-    booking_system_id int          [unique, note: "ID from an external booking system; nullable if payment_system_id is provided."]
-    payment_system_id text         [unique, note: "ID from an external payment system; nullable if booking_system_id is provided."]
+    booking_system_id int          [unique, note: "LatePoint ID or equivalent; nullable if payment_system_id is provided."]
+    payment_system_id text         [unique, note: "Square ID or equivalent; nullable if booking_system_id is provided."]
     first_name        varchar(50)  [not null, note: "Customer's first name."]
     last_name         varchar(50)  [not null, note: "Customer's last name."]
     email             varchar(100) [not null, unique, note: "Customer's email address (must be unique)."]
     phone_number      varchar(20)  [note: "Customer's phone number."]
-    gender_identity   varchar(10)  [note: "Gender identity (e.g., Male, Female, Non-Binary)."]
+    gender_identity   varchar(10)  [note: "Values: Male, Female, Non-Binary, Prefer Not to Say"]
     birthdate         date         [note: "Customer's date of birth."]
     primary_address   jsonb        [note: "Structured address data in JSON format."]
-    session_preferences jsonb      [note: "Session preferences, including aromatherapy, music, etc."]
-    data_source       varchar(20)  [not null, default: "admin", note: "Source of the customer record (e.g., admin, latepoint, square, acuity)."]
-    created_at        timestamp    [not null, default: "CURRENT_TIMESTAMP", note: "Timestamp when the record was created."]
-    updated_at        timestamp    [not null, default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", note: "Timestamp when the record was last updated."]
+    session_preferences jsonb      [note: "Session preferences including aromatherapy, music, etc."]
+    data_source       varchar(20)  [not null, default: 'admin', note: "Allowed values: admin, latepoint, square, acuity"]
+    created_at        timestamp    [not null, default: `now()`, note: "Record creation timestamp"]
+    updated_at        timestamp    [not null, default: `now()`, note: "Record last updated timestamp"]
 
     Indexes {
         booking_system_id [unique]
@@ -21,6 +21,10 @@ Table customers {
     }
 
     Note: "Each customer must have at least one of booking_system_id or payment_system_id."
+}
+
+TableGroup CustomerSystem {
+    customers
 }
 
 Table orders {

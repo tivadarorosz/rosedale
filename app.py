@@ -161,11 +161,11 @@ def register_blueprints(app: Flask) -> None:
 
         # Webhook blueprints
         from src.api.webhooks.customers import customers_bp
-        from src.api.webhooks.orders import orders_bp
+        # from src.api.webhooks.orders import orders_bp
         from src.api.webhooks.campfire import campfire_webhook
 
         app.register_blueprint(customers_bp, url_prefix="/customers")
-        app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")
+        # app.register_blueprint(orders_bp, url_prefix="/api/v1/webhooks/orders")
 
         app.register_blueprint(campfire_webhook, url_prefix="/api/v1/webhooks/campfire")
 
@@ -310,5 +310,12 @@ def handle_exception(error: Exception) -> tuple[Response, int]:
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    # For local development
+    if os.getenv("KINSTA_ENVIRONMENT") is None:
+        # Use port 5001 locally to avoid AirPlay conflict
+        port = int(os.getenv("PORT", 5001))
+        app.run(host="0.0.0.0", port=port)
+    else:
+        # In Kinsta environment, just run the app
+        # Kinsta will handle the port binding through their environment
+        app.run()

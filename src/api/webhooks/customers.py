@@ -84,22 +84,14 @@ def process_customer_request(customer_data, platform):
 @log_webhook_request
 @validate_latepoint_customer_webhook
 def handle_latepoint_customer_webhook():
-    """
-    Handles incoming customer creation or update requests from LatePoint.
-    """
-    # Parse the payload
     data = request.form.to_dict()
     custom_fields = CustomerDataProcessor.parse_custom_fields(data.get("custom_fields"))
 
-    # Build customer data
-    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="LatePoint")
-    customer_data["session_preferences"] = CustomerDataProcessor.build_session_preferences(
-        custom_fields
-    )
-    customer_data["gender_identity"] = get_gender(data.get("first_name", ""))
+    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="latepoint")
+    customer_data["massage_preferences"] = CustomerDataProcessor.build_massage_preferences(custom_fields)
+    customer_data["gender"] = get_gender(data.get("first_name", ""))
 
-    # Process the customer request
-    return process_customer_request(customer_data, platform="LatePoint")
+    return process_customer_request(customer_data, platform="latepoint")
 
 
 @customers_bp.route("/square/new", methods=["POST"])
@@ -116,7 +108,7 @@ def handle_square_customer_webhook():
     data = request.get_json()["data"]["object"]["customer"]
 
     # Build customer data
-    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="Square")
+    customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="square")
 
     # Process the customer request
-    return process_customer_request(customer_data, platform="Square")
+    return process_customer_request(customer_data, platform="square")

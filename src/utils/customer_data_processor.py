@@ -34,13 +34,15 @@ class CustomerDataProcessor:
                 "first_name": "first_name",
                 "last_name": "last_name",
                 "email": "email",
-                "id": "id",
+                "booking_system_id": "id",
+                "signup_source": "LatePoint",
             },
             "Square": {
                 "first_name": "given_name",
                 "last_name": "family_name",
                 "email": "email_address",
-                "id": "id",
+                "payment_system_id": "id",
+                "signup_source": "Square",
             },
         }
 
@@ -51,7 +53,7 @@ class CustomerDataProcessor:
         mapping = field_mapping[source]
 
         # Validate and extract required fields
-        required_fields = ["first_name", "last_name", "email", "id"]
+        required_fields = ["first_name", "last_name", "email"]
         missing_fields = [
             field for field in required_fields if not data.get(mapping[field])
         ]
@@ -63,21 +65,35 @@ class CustomerDataProcessor:
             "first_name": data[mapping["first_name"]].strip(),
             "last_name": data[mapping["last_name"]].strip(),
             "email": data[mapping["email"]].strip(),
-            "booking_system_id": data[mapping["id"]].strip(),
+            "booking_system_id": int(data[mapping["booking_system_id"]]) if source.lower() == "latepoint" else None,
+            "payment_system_id": data[mapping["payment_system_id"]] if source.lower() == "square" else None,
+            "signup_source": source.lower()
         }
 
     @staticmethod
-    def build_session_preferences(custom_fields):
+    def build_massage_preferences(custom_fields):
         """
-        Build session preferences from custom fields.
+        Build and validate massage preferences from custom fields.
         """
-        return {
-            "medical_conditions": custom_fields.get("cf_fV6mSkLi", "").strip().lower()
-            == "yes",
+        preferences = {
+            "medical_conditions": custom_fields.get("cf_fV6mSkLi", "").strip().lower() == "yes",
             "pressure_level": custom_fields.get("cf_BUQVMrtE", "").strip(),
             "session_preference": custom_fields.get("cf_MYTGXxFc", "").strip(),
             "music_preference": custom_fields.get("cf_aMKSBozK", "").strip(),
             "aromatherapy_preference": custom_fields.get("cf_71gt8Um4", "").strip(),
             "referral_source": custom_fields.get("cf_OXZkZKUw", "").strip(),
-            "email_subscribed": False,  # Default to False
+            "email_subscribed": False
         }
+
+        # Validate all values are of correct type
+        assert isinstance(preferences["medical_conditions"], bool)
+        assert all(isinstance(v, str) for v in [
+            preferences["pressure_level"],
+            preferences["session_preference"],
+            preferences["music_preference"],
+            preferences["aromatherapy_preference"],
+            preferences["referral_source"]
+        ])
+        assert isinstance(preferences["email_subscribed"], bool)
+
+        return preferences

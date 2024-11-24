@@ -19,7 +19,7 @@ class Customer(db.Model):
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone_number = db.Column(db.String(20), nullable=True)
-    gender_identity = db.Column(
+    gender = db.Column(
         db.String(10),
         nullable=True,
         comment="Values: Male, Female, Non-Binary, Prefer Not to Say"
@@ -27,21 +27,21 @@ class Customer(db.Model):
     birthdate = db.Column(db.Date, nullable=True)
 
     # Address (JSONB Format)
-    primary_address = db.Column(
+    address = db.Column(
         JSONB,
         nullable=True,
         comment="Structured address data in JSON format"
     )
 
     # Preferences (JSONB Format)
-    session_preferences = db.Column(
+    massage_preferences = db.Column(
         JSONB,
         nullable=True,
         comment="Session preferences including aromatherapy, music, etc."
     )
 
     # Source of Customer Record
-    data_source = db.Column(
+    signup_source = db.Column(
         db.String(20),
         nullable=False,
         default="admin",
