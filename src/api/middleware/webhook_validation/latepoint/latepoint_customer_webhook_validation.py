@@ -4,6 +4,8 @@ from src.api.validators.customer_validators import CustomerValidator
 class LatePointCustomerWebhookValidator:
     @staticmethod
     def validate_customer_payload(data):
+
+        print(data.get("email"))
         # Validate email
         if not CustomerValidator.validate_email(data.get("email")):
             return False, "Invalid email address"

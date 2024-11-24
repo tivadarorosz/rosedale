@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from src.extensions import db
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 class Customer(db.Model):
     __tablename__ = "customers"
@@ -63,6 +64,10 @@ class Customer(db.Model):
         nullable=False,
         comment="Record last updated timestamp"
     )
+
+    # Relationships
+    orders = relationship("Order", back_populates="customer", cascade="all, delete-orphan")
+    appointments = relationship("Appointment", back_populates="customer", cascade="all, delete-orphan")
 
     # Constraints to enforce booking_system_id or payment_system_id
     __table_args__ = (

@@ -28,21 +28,29 @@ class CustomerDataProcessor:
         Raises:
             ValueError: If a required field is missing.
         """
+
+        print("Received data:", data)
+        print("Passing source:", source)
+
+        supported_sources = ["admin", "latepoint", "square", "acuity"]
+        if source not in supported_sources:
+            raise ValueError(f"Unsupported source: {source}")
+
         # Define source-specific mappings
         field_mapping = {
-            "LatePoint": {
+            "latepoint": {
                 "first_name": "first_name",
                 "last_name": "last_name",
                 "email": "email",
                 "booking_system_id": "id",
-                "signup_source": "LatePoint",
+                "signup_source": "latepoint",
             },
-            "Square": {
+            "square": {
                 "first_name": "given_name",
                 "last_name": "family_name",
                 "email": "email_address",
                 "payment_system_id": "id",
-                "signup_source": "Square",
+                "signup_source": "square",
             },
         }
 
