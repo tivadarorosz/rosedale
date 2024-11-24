@@ -1,6 +1,6 @@
-from typing import Optional, Dict, Any
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
+from typing import Optional, Dict, Any, List
 import logging
 # from datetime import datetime
 from functools import wraps
@@ -113,7 +113,7 @@ class CustomerService:
 
     @staticmethod
     @handle_exceptions
-    def update_customer(customer_id: int, data: Dict[str, Any]) -> Optional[Customer]:
+    def update_customer(customer_id: int, data: Dict[str, Any], fields_to_update: List[str]) -> Optional[Customer]:
         """
         Updates a Customer object with the provided data.
 
@@ -128,9 +128,10 @@ class CustomerService:
             # Retrieve the customer by ID
             customer = Customer.query.filter_by(id=customer_id).one()
 
-            # Update the customer's attributes based on the provided data
-            for key, value in data.items():
-                setattr(customer, key, value)
+            # Update the customer's attributes based on the provided data and fields_to_update
+            for field in fields_to_update:
+                if field in data:
+                    setattr(customer, field, data[field])
 
             # Commit the changes to the database
             db.session.commit()

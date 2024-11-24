@@ -1,5 +1,5 @@
-import json
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -11,10 +11,14 @@ class CustomerDataProcessor:
         """
         try:
             if custom_fields_json:
-                return json.loads(custom_fields_json)
-        except json.JSONDecodeError:
-            logger.error("Invalid JSON in custom_fields")
-        return {}  # Return an empty dictionary if parsing fails
+                return {
+                    key.replace("custom_fields[", "").replace("]", ""): value
+                    for key, value in request.form.items()
+                    if key.startswith("custom_fields[")
+                }
+        except (ValueError, TypeError):
+            logger.error("Invalid custom_fields data")
+        return {}
 
     @staticmethod
     def extract_core_customer_data(data, source):
@@ -22,21 +26,19 @@ class CustomerDataProcessor:
         Extract and validate the core customer data from various sources.
 
         Args:
-            data: The webhook payload.
-            source: The source of the webhook (e.g., "LatePoint", "Square").
+            data (dict): The webhook payload.
+            source (str): The source of the webhook (e.g., "LatePoint", "Square").
+
+        Returns:
+            dict: The extracted and validated customer data.
 
         Raises:
             ValueError: If a required field is missing.
         """
-
-        print("Received data:", data)
-        print("Passing source:", source)
-
         supported_sources = ["admin", "latepoint", "square", "acuity"]
         if source not in supported_sources:
             raise ValueError(f"Unsupported source: {source}")
 
-        # Define source-specific mappings
         field_mapping = {
             "latepoint": {
                 "first_name": "first_name",
@@ -54,17 +56,12 @@ class CustomerDataProcessor:
             },
         }
 
-        # Ensure source is supported
         if source not in field_mapping:
             raise ValueError(f"Unsupported source: {source}")
 
         mapping = field_mapping[source]
-
-        # Validate and extract required fields
         required_fields = ["first_name", "last_name", "email"]
-        missing_fields = [
-            field for field in required_fields if not data.get(mapping[field])
-        ]
+        missing_fields = [field for field in required_fields if not data.get(mapping[field])]
 
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
@@ -75,33 +72,35 @@ class CustomerDataProcessor:
             "email": data[mapping["email"]].strip(),
             "booking_system_id": int(data[mapping["booking_system_id"]]) if source.lower() == "latepoint" else None,
             "payment_system_id": data[mapping["payment_system_id"]] if source.lower() == "square" else None,
-            "signup_source": source.lower()
+            "signup_source": source.lower(),
         }
 
     @staticmethod
-    def build_massage_preferences(custom_fields):
+    def build_massage_preferences(data):
         """
         Build and validate massage preferences from custom fields.
+
+        Args:
+            data (dict): The custom fields data.
+
+        Returns:
+            dict: The built and validated massage preferences.
         """
+        custom_fields = data
         preferences = {
             "medical_conditions": custom_fields.get("cf_fV6mSkLi", "").strip().lower() == "yes",
-            "pressure_level": custom_fields.get("cf_BUQVMrtE", "").strip(),
-            "session_preference": custom_fields.get("cf_MYTGXxFc", "").strip(),
-            "music_preference": custom_fields.get("cf_aMKSBozK", "").strip(),
-            "aromatherapy_preference": custom_fields.get("cf_71gt8Um4", "").strip(),
-            "referral_source": custom_fields.get("cf_OXZkZKUw", "").strip(),
-            "email_subscribed": False
+            "pressure_level": custom_fields.get("cf_BUQVMrtE", "").strip() or "Medium",
+            "session_preference": custom_fields.get("cf_MYTGXxFc", "").strip() or "Quiet",
+            "music_preference": custom_fields.get("cf_aMKSBozK", "").strip() or "Nature Sounds",
+            "aromatherapy_preference": custom_fields.get("cf_71gt8Um4", "").strip() or "Lavender",
+            "referral_source": custom_fields.get("cf_OXZkZKUw", "").strip() or "",
+            "email_subscribed": False,
         }
 
-        # Validate all values are of correct type
-        assert isinstance(preferences["medical_conditions"], bool)
-        assert all(isinstance(v, str) for v in [
-            preferences["pressure_level"],
-            preferences["session_preference"],
-            preferences["music_preference"],
-            preferences["aromatherapy_preference"],
-            preferences["referral_source"]
-        ])
-        assert isinstance(preferences["email_subscribed"], bool)
+        for key, value in preferences.items():
+            if key in ["medical_conditions", "email_subscribed"]:
+                assert isinstance(value, bool)
+            else:
+                assert isinstance(value, str)
 
         return preferences

@@ -35,10 +35,13 @@ def process_customer_request(customer_data, platform):
     try:
         # Check if the customer already exists
         existing_customer = CustomerService.get_customer_by_email(customer_data["email"])
+        fields_to_update = ["first_name", "last_name", "email", "phone_number", "payment_system_id"]
         if existing_customer:
-            updated_customer = CustomerService.update_customer(
-                existing_customer.id, customer_data
-            )
+            if platform == "latepoint":
+                fields_to_update = ["booking_system_id", "first_name", "last_name", "gender", "massage_preferences"]
+            elif platform == "square":
+                fields_to_update = ["payment_system_id", "phone_number", "address"]
+            updated_customer = CustomerService.update_customer(existing_customer.id, customer_data, fields_to_update)
             return (
                 jsonify(
                     {
