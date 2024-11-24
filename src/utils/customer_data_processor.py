@@ -53,6 +53,8 @@ class CustomerDataProcessor:
                 "email": "email_address",
                 "payment_system_id": "id",
                 "signup_source": "square",
+                "phone_number": "phone_number",
+                "address": "address",
             },
         }
 
@@ -73,6 +75,8 @@ class CustomerDataProcessor:
             "booking_system_id": int(data[mapping["booking_system_id"]]) if source.lower() == "latepoint" else None,
             "payment_system_id": data[mapping["payment_system_id"]] if source.lower() == "square" else None,
             "signup_source": source.lower(),
+            "phone_number": data.get("phone_number", None),
+            "address": data.get("address", None),
         }
 
     @staticmethod

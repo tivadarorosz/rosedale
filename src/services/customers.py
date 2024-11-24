@@ -2,12 +2,10 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 from typing import Optional, Dict, Any, List
 import logging
-# from datetime import datetime
 from functools import wraps
 from src.models import Customer
 from src.core.monitoring import handle_error
 from src.extensions import db
-from src.utils.gender_api import get_gender
 
 logger = logging.getLogger(__name__)
 

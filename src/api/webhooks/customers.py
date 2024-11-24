@@ -112,6 +112,7 @@ def handle_square_customer_webhook():
 
     # Build customer data
     customer_data = CustomerDataProcessor.extract_core_customer_data(data, source="square")
+    customer_data["gender"] = get_gender(data.get("given_name", ""))
 
     # Process the customer request
     return process_customer_request(customer_data, platform="square")
