@@ -23,7 +23,7 @@ class Customer(db.Model):
     gender = db.Column(
         db.String(10),
         nullable=True,
-        comment="Values: Male, Female, Non-Binary, Prefer Not to Say"
+        comment="Values: male, female, unknown"
     )
     birthdate = db.Column(db.Date, nullable=True)
 
@@ -38,7 +38,7 @@ class Customer(db.Model):
     massage_preferences = db.Column(
         JSONB,
         nullable=True,
-        comment="Session preferences including aromatherapy, music, etc."
+        comment="Massage preferences including aromatherapy, music, etc."
     )
 
     # Source of Customer Record
